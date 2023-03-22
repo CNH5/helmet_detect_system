@@ -1,4 +1,4 @@
-"""helmet_check_system URL Configuration
+"""helmet_detect_system URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.1/topics/http/urls/
@@ -15,10 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-from helmet_check_system.views import monitor as monitor_view
+import detect.views as detect_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("test/", monitor_view.test_rtsp)
+    path("test/<int:key>", detect_view.stream_detected)
 ]

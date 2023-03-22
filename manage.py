@@ -6,7 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "helmet_check_system.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "helmet_detect_system.settings")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
