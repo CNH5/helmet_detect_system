@@ -2,6 +2,7 @@ import threading
 
 import cv2
 import numpy as np
+from .yolo import YOLOv8Factory
 
 
 class DetectThread(threading.Thread):
@@ -11,16 +12,13 @@ class DetectThread(threading.Thread):
 
     def __init__(self, frame_generate):
         super().__init__()
-        self.__frame_generate = frame_generate  # 帧生成器
-        self.__lock = threading.Lock()  # 读写锁
-        self.__working = True  # 终止标志
-        self.__frame = np.zeros([1, 1])  # 当前帧
+        self._frame_generate = frame_generate  # 帧生成器
+        self._working = True  # 终止标志
+        self._frame = np.zeros([1, 1])  # 当前帧
 
     def display_frame(self):
-        while self.__working:
-            self.__lock.acquire()
-            frame = self.__frame
-            self.__lock.release()
+        while self._working:
+            frame = self._frame
             ret, img = cv2.imencode('.jpeg', frame)
             if ret:
                 # 转换为byte类型的，存储在迭代器中
@@ -28,17 +26,21 @@ class DetectThread(threading.Thread):
                        b'Content-Type: image/jpeg\r\n\r\n' + img.tobytes() + b'\r\n')
 
     def run(self) -> None:
-        for frame in self.__frame_generate:
-            if self.__working:
-                self.__lock.acquire()
-                self.__frame = frame
-                self.__lock.release()
+        for frame in self._frame_generate:
+            if self._working:
+                self._frame = frame
 
     def terminate(self):
         """
         终止线程
         """
-        self.__working = False
+        self._working = False
+
+
+class DetectThreadFactory:
+    @classmethod
+    def get(cls, frame_generate):
+        return DetectThread(frame_generate)
 
 
 class DetectThreadPool:
@@ -47,41 +49,56 @@ class DetectThreadPool:
     """
 
     def __init__(self):
-        self.__pool: dict[int:DetectThread] = {}
+        self._pool: dict[int:DetectThread] = {}
+        self._running = False
 
     def start(self):
         """
         开始所有线程
         """
-        for thread in self.__pool.values():
-            thread.setDaemon(True)
-            thread.start()
+        if not self._running:
+            for thread in self._pool.values():
+                thread.setDaemon(True)
+                thread.start()
+        self._running = True
 
-    def stop(self, key: int):
+    def remove_thread(self, key: int):
         """
-        停止单个进程
+        移除单个进程
+        @param key 视频流id
         """
-        thread = self.__pool.get(key, None)
+        thread = self._pool.get(key, None)
         if thread is not None:
-            self.__pool.pop(key)
+            self._pool.pop(key)
+        if self._running:
             thread.terminate()
 
     def terminate(self):
         """
         终止所有进程
         """
-        for key in self.__pool.keys():
-            self.__pool[key].terminate()
+        if self._running:
+            for key in self._pool.keys():
+                self._pool[key].terminate()
 
-    def add(self, key, generate):
+    def add_thread(self, key, source: str):
         """
-        添加线程
+        添加安全帽检测线程
+        @param key 视频流id
+        @param source 视频流的源
         """
-        if self.__pool.get(key, None) is None:
-            self.__pool[key] = DetectThread(generate)
+        if self._pool.get(key, None) is None:
+            self._pool[key] = DetectThreadFactory.get(YOLOv8Factory.get().frame_generate(source))
+            if self._running:
+                self._pool[key].start()
 
     def get(self, key):
         """
         获取线程
+        @param key 视频流id
         """
-        return self.__pool.get(key, None)
+        return self._pool.get(key, None)
+
+
+detect_thread_pool = DetectThreadPool()
+detect_thread_pool.start()

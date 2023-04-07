@@ -1,0 +1,12 @@
+{% extends "monitor/base.html" %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'monitor:manage' %}">监控列表</a></li>
+        <li class="breadcrumb-item" aria-current="page">{{ monitor.name }}</li>
+    </ol>
+{% endblock %}
+
+{% block page-content %}
+
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends "monitor/base.html" %}
+{% block title %}
+    <title>监控设备管理</title>
+{% endblock %}
+
+{% block style %}
+    {{ block.super }}
+    <link href="{% static "monitor/manage/manage.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item" aria-current="page">监控列表</li>
+    </ol>
+{% endblock %}
+
+{% block page-content %}
+    <div id="table-options" class="navbar">
+        <!-- 表头选项 -->
+        <ul class="nav">
+            <li class="nav-item">
+                <div class="btn-group" role="group">
+                    <button id="option-button" class="btn btn-outline-primary btn-sm dropdown-toggle btn-dropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        操作
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li id="test-checked-monitor-source" class="dropdown-item c-p">
+                            连接测试
+                        </li>
+                        <li id="open-checked-monitor-detect" class="dropdown-item c-p">
+                            开启安全帽检测
+                        </li>
+                        <li id="close-checked-monitor-detect" class="dropdown-item c-p">
+                            关闭安全帽检测
+                        </li>
+                        <li id="delete-checked-monitor" class="dropdown-item c-p menu-looks-danger">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+                            </svg>
+                            删除监控
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item" style="margin-left: 15px">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle btn-dropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        筛选
+                    </button>
+                    <div id="filter-content" class="dropdown-menu">
+                        <div id="filter-list">
+                            <span class="no-filter-text mt-2">未启用筛选</span>
+                        </div>
+                        <div class="navbar filter-add" style="width: 100%">
+                            <button id="btn-add-filter" type="button"
+                                    class="btn btn-outline-secondary btn-mini-bottom-left">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                                     class="bi bi-plus" viewBox="0 0 18 18">
+                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                                </svg>
+                                <span>添加筛选器</span>
+                            </button>
+                            <button id="expand-filter"
+                                    class="btn btn-primary btn-mini-bottom-right justify-content-end">
+                                >
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+        <ul class="nav justify-content-end">
+            <li class="nav-item">
+                <button id="btn-refresh" class="btn btn-primary btn-sm">
+                    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
+                         style="width: 17px; height: 17px;">
+                        <path d="M5.857 4.357L4 2.5l-1 6 6-1-1.705-1.705A4.976 4.976 0 0110 5V3c-1.55 0-2.983.504-4.143 1.357zM5.527 12.237A5 5 0 0010 15v2a7 7 0 01-6.262-3.869l1.789-.894zM14.143 15.643L16 17.5l1-6-6 1 1.706 1.706A4.976 4.976 0 0110 15v2c1.55 0 2.983-.504 4.143-1.357zM14.473 7.763A5 5 0 0010 5V3a7 7 0 016.262 3.869l-1.789.894z"
+                              fill="currentColor"></path>
+                    </svg>
+                </button>
+            </li>
+            <li class="nav-item" style="margin-left: 15px">
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="offcanvas"
+                        data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
+                    添加监控
+                </button>
+            </li>
+        </ul>
+    </div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th class="input-group" scope="col">
+                <label><input type="checkbox" name="all-check-box"></label>
+                <div id="pk" class="c-p" style="flex: 1;margin-left: 5px">
+                    <div class="table-header-left">ID</div>
+                    <div class="table-header-right"></div>
+                </div>
+            </th>
+            <th id="name" class="c-p border-start" scope="col">
+                <div class="table-header-left">监控名</div>
+                <div class="table-header-right"></div>
+            </th>
+            <th id="create-date" class="c-p border-start" scope="col">
+                <div class="table-header-left">创建日期</div>
+                <div class="table-header-right"></div>
+            </th>
+            <th class="border-start" scope="col">
+                监控源
+            </th>
+            <th class="border-start" scope="col">
+                安全帽检测
+            </th>
+        </tr>
+        </thead>
+        <tbody id="monitor-list">
+        <!-- 监控设备表内容 -->
+        </tbody>
+    </table>
+    <div id="pagination">
+        <!-- 底部分页选项 -->
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasRightLabel">添加监控设备</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body border-top">
+            <form id="form-monitor-add">
+                <div class="input-group-sm mb-3 row">
+                    <label for="monitor-name" class="col-sm-3 col-form-label">监控名</label>
+                    <div class="col-sm-9">
+                        <input type="text" placeholder="1~20个字" maxlength="20" required
+                               id="monitor-name" name="name" class="form-control form-add-input">
+                        <div class="invalid-feedback">
+                            请填写监控名
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-sm-3 col-form-label" for="monitor-source">监控源</label>
+                    <div class="col-sm-9">
+                    <textarea id="monitor-source" name="source" class="form-control form-add-input"
+                              placeholder="支持设备id、RTSP、 RTMP、 HTTP" required></textarea>
+                    </div>
+                    <div class="invalid-feedback">
+                        请填写监控源
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <div class="col-sm-3">
+                        <button id="btn-monitor-review" class="btn btn-outline-primary btn-sm disabled">
+                            监控预览
+                        </button>
+                    </div>
+                    <div class="col-sm-9">
+                        <div id="loading-review" role="status"
+                             class="spinner-grow spinner-grow-sm text-primary mt-2 visually-hidden">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div id="source-review" class="shadow-none bg-body-tertiary"></div>
+                </div>
+                <div class="mb-3">
+                    <input type="checkbox" class="form-check-input" id="detect-helmet" name="detect" checked>
+                    <label class="form-check-label" for="detect-helmet">安全帽佩戴检测</label>
+                </div>
+                <div class="submit-row border-top row">
+                    <div class="col-4"></div>
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-primary">添加监控</button>
+                    </div>
+                    <div class="col-4"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+    <script>
+        let monitorQueryURL = "{% url 'monitor:query' %}"
+        let monitorInfoURL = "{% url "monitor:info" 0 %}"
+        let monitorInsertURL = "{% url 'monitor:insert' %}"
+        let monitorDeleteURL = "{% url 'monitor:delete' %}"
+        let monitorDetectChangeURL = "{% url 'monitor:update_detect' %}"
+        let monitorReviewURL = "{% url 'monitor:review' %}"
+        let existsSourceTestURL = "{% url 'monitor:exists_source_test' %}"
+        let newSourceTestURL = "{% url 'monitor:new_source_test' %}"
+        let csrfToken = "{{ csrf_token }}"
+    </script>
+    <script src="{% static "monitor/manage/manage.js" %}"></script>
+{% endblock %}
