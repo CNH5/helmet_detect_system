@@ -1,0 +1,9 @@
+.source-video {
+    width: 100%;
+    aspect-ratio: 16/9;
+}
+
+.form-title{
+    background: #0d6efd;
+    color: #ffffff;
+}

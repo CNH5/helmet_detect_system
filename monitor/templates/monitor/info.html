@@ -1,12 +1,57 @@
 {% extends "monitor/base.html" %}
 
-{% block breadcrumb %}
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'monitor:manage' %}">监控列表</a></li>
-        <li class="breadcrumb-item" aria-current="page">{{ monitor.name }}</li>
-    </ol>
+{% block style %}
+    {{ block.super }}
+    <link href="{% static "monitor/info/info.css" %}" rel="stylesheet">
 {% endblock %}
 
-{% block page-content %}
+{% block breadcrumbs %}
+    <ul class="breadcrumbs pull-left">
+        <li><a href="{% url 'monitor:manage' %}">监控列表</a></li>
+        <li><span>{{ monitor.name }}</span></li>
+    </ul>
+{% endblock %}
 
+{% block main-content %}
+    <div class="card mt-4">
+        <div class="card-body row">
+            <div class="col-9">
+                <video class="source-video border" src=""></video>
+            </div>
+            <div class="col-3">
+                <div class="form-title navbar mb-3">
+                    <div class="ms-2">监控信息</div>
+                    <div class="me-2 justify-content-end">
+                        编辑
+                    </div>
+                </div>
+                <form class="update-form">
+                    <div class="mb-3">
+                        <label for="monitor-name-input" class="form-label ms-2 fs-6">监控名</label>
+                        <input type="text" maxlength="20" class="form-control" id="monitor-name-input"
+                               placeholder="监控名" value="{{ monitor.name }}" name="name" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="monitor-source-input" class="form-label ms-2">监控源</label>
+                        <textarea class="form-control" id="monitor-source-input"
+                                  name="source" disabled>{{ monitor.source }}</textarea>
+                    </div>
+                    <div class="form-check form-switch">
+                        <label class="form-check-label" for="helmet-detect-checkbox">安全帽检测</label>
+                        <input class="form-check-input" type="checkbox" role="switch" id="helmet-detect-checkbox"
+                               {% if monitor.helmet_detect %}checked{% endif %} disabled>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+    <script>
+        let infoUpdateURL = "{% url 'monitor:update' monitor.pk %}"
+        let csrfToken = "{{ csrf_token }}"
+    </script>
+    <script src="{% static 'monitor/info/info.js' %}"></script>
 {% endblock %}

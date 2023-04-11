@@ -1,20 +1,9 @@
-{% extends "base_home.html" %}
+{% extends "base-home.html" %}
+
+{% block page-title %}
+    监控设备管理
+{% endblock %}
 
 {% block monitor-manage %}
     active
-{% endblock %}
-
-{% block page %}
-    <div class="wp">
-        <div class="breadcrumb-content">
-            {% block breadcrumb %}
-                <!-- 面包屑导航栏 -->
-            {% endblock %}
-        </div>
-        <div class="page-content">
-            {% block page-content %}
-                <!-- 页面内容 -->
-            {% endblock %}
-        </div>
-    </div>
 {% endblock %}

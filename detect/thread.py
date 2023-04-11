@@ -2,12 +2,15 @@ import threading
 
 import cv2
 import numpy as np
-from .yolo import YOLOv8Factory
+
+from monitor.models import Monitor
+from .yolo import ModelYOLOv8
+from .message import PORT
 
 
 class DetectThread(threading.Thread):
     """
-    安全帽检测检测线程
+    安全帽检测线程
     """
 
     def __init__(self, frame_generate):
@@ -18,8 +21,7 @@ class DetectThread(threading.Thread):
 
     def display_frame(self):
         while self._working:
-            frame = self._frame
-            ret, img = cv2.imencode('.jpeg', frame)
+            ret, img = cv2.imencode('.jpeg', self._frame)
             if ret:
                 # 转换为byte类型的，存储在迭代器中
                 yield (b'--frame\r\n'
@@ -35,12 +37,6 @@ class DetectThread(threading.Thread):
         终止线程
         """
         self._working = False
-
-
-class DetectThreadFactory:
-    @classmethod
-    def get(cls, frame_generate):
-        return DetectThread(frame_generate)
 
 
 class DetectThreadPool:
@@ -81,16 +77,14 @@ class DetectThreadPool:
             for key in self._pool.keys():
                 self._pool[key].terminate()
 
-    def add_thread(self, key, source: str):
+    def add_thread(self, monitor):
         """
         添加安全帽检测线程
-        @param key 视频流id
-        @param source 视频流的源
         """
-        if self._pool.get(key, None) is None:
-            self._pool[key] = DetectThreadFactory.get(YOLOv8Factory.get().frame_generate(source))
+        if not self._pool.get(monitor.pk, None):
+            self._pool[monitor.pk] = DetectThread(ModelYOLOv8(monitor, PORT).generate_frame())
             if self._running:
-                self._pool[key].start()
+                self._pool[monitor.pk].start()
 
     def get(self, key):
         """
@@ -101,4 +95,6 @@ class DetectThreadPool:
 
 
 detect_thread_pool = DetectThreadPool()
+# for m in Monitor.objects.filter(helmet_detect=True):
+#     detect_thread_pool.add_thread(m)
 detect_thread_pool.start()

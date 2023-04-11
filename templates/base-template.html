@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+        <title>安全帽佩戴检测</title>
+    {% endblock %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block icon %}
+        <link href="{% static "img/favicon.ico" %}" rel="icon">
+    {% endblock %}
+    <link rel="stylesheet" href="{% static 'assets/css/bootstrap-5.3.0.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/themify-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/metisMenu.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/slicknav.min.css' %}">
+    <!-- amchart css -->
+    <link rel="stylesheet" href="{% static 'assets/css/export.css' %}" type="text/css" media="all"/>
+    <!-- others css -->
+    <link rel="stylesheet" href="{% static 'assets/css/typography.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/default-css.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
+    {% block style %}
+    {% endblock %}
+    <!-- modernizr css -->
+    <script src="{% static 'assets/js/vendor/modernizr-2.8.3.min.js' %}"></script>
+</head>
+<body>
+<!--[if lt IE 8]>
+<p class="browserupgrade">
+    You are using an <strong>outdated</strong> browser. Please
+    <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.
+</p>
+<![endif]-->
+<!-- preloader area start -->
+<div id="preloader">
+    <div class="loader"></div>
+</div>
+<!-- preloader area end -->
+<!-- offset area start -->
+{% block content %}
+{% endblock content %}
+<!-- offset area end -->
+<!-- jquery latest version -->
+<script src="{% static 'assets/js/vendor/jquery-3.6.4.min.js' %}"></script>
+<script src="{% static 'assets/js/vendor/jquery.cookie.js' %}"></script>
+<!-- bootstrap js -->
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/js/bootstrap-5.3.0.bundle.min.js' %}"></script>
+<script src="{% static 'assets/js/owl.carousel.min.js' %}"></script>
+<script src="{% static 'assets/js/metisMenu.min.js' %}"></script>
+<script src="{% static 'assets/js/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/js/jquery.slicknav.min.js' %}"></script>
+<!-- others plugins -->
+<script src="{% static 'assets/js/plugins.js' %}"></script>
+<script src="{% static 'assets/js/scripts.js' %}"></script>
+{% block script %}
+{% endblock script %}
+</body>
+</html>

@@ -14,7 +14,7 @@
     float: right;
 }
 
-.table-row-clickable {
+.clickable {
     cursor: pointer;
 }
 
@@ -127,7 +127,7 @@
     padding-bottom: 0;
 }
 
-.remove-filter{
+.remove-filter {
     margin-left: 2px;
 }
 
@@ -135,6 +135,18 @@
     font-size: 14px;
 }
 
-.value-input{
+.value-input {
     flex: 1;
+}
+
+thead {
+    background-color: #1089a3;
+}
+
+.card-body{
+    padding: 10px 15px 0;
+}
+
+.header-title{
+    margin-bottom: 0;
 }

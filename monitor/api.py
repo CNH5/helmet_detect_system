@@ -29,7 +29,7 @@ def insert(request):
     """
     添加监控设备
     """
-    form = InsertForm(request.POST)
+    form = InfoForm(request.POST)
     if not form.is_valid():
         return JsonResponse({
             "code": 403,
@@ -68,11 +68,11 @@ def delete(request):
 
 
 @require_POST
-def update_info(request):
+def update_info(request, monitor_id: int):
     """
     修改监控设备信息
     """
-    form = UpdateForm(request.POST)
+    form = InfoForm(request.POST)
     if not form.is_valid():
         return JsonResponse({
             "code": 403,
@@ -80,7 +80,7 @@ def update_info(request):
         })
 
     data = form.cleaned_data
-    monitor = Monitor.objects.get(pk=data.get("pk"))
+    monitor = Monitor.objects.get(pk=monitor_id)
     monitor.name = data.get("name")
     monitor.source = data.get("source")
     monitor.helmet_detect = data.get("detect")
@@ -210,7 +210,7 @@ def test_new_source(request):
             "token": jwt.encode({
                 "source": source,
                 "session": request.session.session_key,
-                "exp": time.time() + 1200000  # 20分钟过期
+                "exp": time.time() + 1200  # 20分钟过期
             }, key=settings.SECRET_KEY, algorithm="HS256"
             ),
         }
