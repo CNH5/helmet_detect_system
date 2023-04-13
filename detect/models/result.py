@@ -1,7 +1,5 @@
 from django.db import models
 
-from monitor.models import Monitor
-
 
 # Create your models here.
 class Result(models.Model):

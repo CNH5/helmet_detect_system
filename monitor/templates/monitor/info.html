@@ -19,10 +19,10 @@
                 <video class="source-video border" src=""></video>
             </div>
             <div class="col-3">
-                <div class="form-title navbar mb-3">
+                <div class="form-title navbar mb-3 rounded-1">
                     <div class="ms-2">监控信息</div>
                     <div class="me-2 justify-content-end">
-                        编辑
+                        <a href="javascript:" class="btn-edit-info text-white" title="编辑监控信息">编辑</a>
                     </div>
                 </div>
                 <form class="update-form">
@@ -39,18 +39,21 @@
                     <div class="form-check form-switch">
                         <label class="form-check-label" for="helmet-detect-checkbox">安全帽检测</label>
                         <input class="form-check-input" type="checkbox" role="switch" id="helmet-detect-checkbox"
-                               {% if monitor.helmet_detect %}checked{% endif %} disabled>
+                               name="detect" {% if monitor.helmet_detect %}checked{% endif %}>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
 {% endblock %}
 
 {% block script %}
     {{ block.super }}
     <script>
         let infoUpdateURL = "{% url 'monitor:update' monitor.pk %}"
+        let originMonitorName = "{{ monitor.name }}"
+        let originMonitorSource = "{{ monitor.source }}"
         let csrfToken = "{{ csrf_token }}"
     </script>
     <script src="{% static 'monitor/info/info.js' %}"></script>

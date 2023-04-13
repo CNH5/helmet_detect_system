@@ -11,7 +11,7 @@ from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_GET
 from jwt import InvalidSignatureError
 
-from detect.thread import detect_thread_pool
+from detect import result_pool
 from . import utils
 from .forms import *
 
@@ -29,7 +29,7 @@ def insert(request):
     """
     添加监控设备
     """
-    form = InfoForm(request.POST)
+    form = InsertForm(request.POST)
     if not form.is_valid():
         return JsonResponse({
             "code": 403,
@@ -63,7 +63,7 @@ def delete(request):
     monitors = Monitor.objects.filter(pk__in=data.get("pk_list"))
     if (n := monitors.delete()) > 0:
         for monitor in monitors:
-            detect_thread_pool.remove_thread(monitor.pk)
+            result_pool.remove_thread(monitor.pk)
     return JsonResponse({"msg": f"删除了 {n} 条数据"})
 
 
@@ -72,7 +72,7 @@ def update_info(request, monitor_id: int):
     """
     修改监控设备信息
     """
-    form = InfoForm(request.POST)
+    form = InfoUpdateForm(request.POST)
     if not form.is_valid():
         return JsonResponse({
             "code": 403,
@@ -83,7 +83,6 @@ def update_info(request, monitor_id: int):
     monitor = Monitor.objects.get(pk=monitor_id)
     monitor.name = data.get("name")
     monitor.source = data.get("source")
-    monitor.helmet_detect = data.get("detect")
     monitor.save()
     return JsonResponse({
         "code": 200,
@@ -115,9 +114,9 @@ def update_detect(request):
     if (n := monitors.update(helmet_detect=detect)) > 0:
         for monitor in monitors:
             if detect:
-                detect_thread_pool.add_thread(monitor.pk, monitor.source)
+                result_pool.add_thread(monitor)
             else:
-                detect_thread_pool.remove_thread(monitor.pk)
+                result_pool.remove_thread(monitor.pk)
     return JsonResponse({
         "code": 200,
         "msg": f"修改了 {n} 条数据"

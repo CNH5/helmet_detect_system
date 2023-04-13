@@ -1,26 +1,69 @@
-import threading
 import time
-
 import zmq
+import threading
+
+from django.contrib.sessions.models import Session
+from django.db.models import F
+
+from monitor.models import Monitor
+from helmet_detect_system import settings
 
 content = zmq.Context()
+
 _warning_pull = content.socket(zmq.PULL)
-PORT = _warning_pull.bind_to_random_port("tcp://*")
-print(f"zmq port: {PORT}")
-_warning_pool = []
+PULL_PORT = _warning_pull.bind_to_random_port("tcp://*")
+print(f"warning pull port: {PULL_PORT}")
+
+_warning_pub = content.socket(zmq.PUB)
+PUB_PORT = _warning_pub.bind_to_random_port("tcp://*")
+print(f"warning publish port: {PUB_PORT}")
+
+SUB_POOL = {}
 
 
-def listen_warning():
+def publish_warning():
+    """
+    广播警报
+    """
     while True:
         try:
             data = _warning_pull.recv_json(zmq.NOBLOCK)
-            # 将警报添加到消息池
-            print(data)
+            if len(SUB_POOL) > 0:
+                # 有用户，广播警报
+                _warning_pub.send_json(data)
+            else:
+                # 没有用户，更新缓存信息条数
+                Monitor.objects.filter(pk=data["id"]).update(message_count=F("message_count") + 1)
         except zmq.ZMQError:
-            time.sleep(0.5)
+            time.sleep(settings.PUBLISH_INTERVAL)
 
 
-warning_listen_thread = threading.Thread(target=listen_warning)
-warning_listen_thread.name = "warning-listen-thread"
-warning_listen_thread.daemon = True
-warning_listen_thread.start()
+warning_pub_thread = threading.Thread(
+    name="warning-publish-thread",
+    target=publish_warning,
+    daemon=True,
+)
+warning_pub_thread.start()
+
+
+def sub_clean():
+    """
+    清除长期未访问的sub
+    """
+    while True:
+        session_keys = []
+        for key in SUB_POOL:
+            sub = SUB_POOL[key]
+            if time.time() > sub["last-request-time"] + settings.SUB_TIMEOUT_INTERVAL:
+                session_keys.append(key)
+                del SUB_POOL[key]
+        Session.objects.filter(pk__in=session_keys).delete()
+        time.sleep(settings.SUB_CLEAN_INTERVAL)
+
+
+sub_clean_thread = threading.Thread(
+    name="sub_clean-thread",
+    target=sub_clean,
+    daemon=True
+)
+sub_clean_thread.start()

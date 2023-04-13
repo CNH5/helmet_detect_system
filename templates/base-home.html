@@ -25,7 +25,7 @@
                                 </a>
                             </li>
                             <li class="{% block monitor-manage %}{% endblock %}">
-                                <a href="javascript:void(0)">
+                                <a href="{% url 'monitor:manage' %}">
                                     <i class="ti-layout-media-right-alt"></i><span>监控管理</span>
                                 </a>
                             </li>
@@ -39,11 +39,12 @@
                                     <i class="ti-control-backward"></i><span>录像回放</span>
                                 </a>
                             </li>
-                            <li {% block detect-statistics %}{% endblock %}>
+                            <li class="{% block detect-statistics %}{% endblock %}">
                                 <a href="javascript:void(0)">
                                     <i class="ti-pie-chart"></i><span>识别统计</span>
                                 </a>
                             </li>
+
                         </ul>
                     </nav>
                 </div>
@@ -63,9 +64,7 @@
                                 <span></span>
                             </div>
                             <h4 class="page-title pull-left">
-                                {% block page-title %}
-                                    Dashboard
-                                {% endblock %}
+                                {% block page-title %}Dashboard{% endblock %}
                             </h4>
                             {% block breadcrumbs %}
                                 <ul class="breadcrumbs pull-left">
@@ -80,64 +79,10 @@
                             <li id="full-view"><i class="ti-fullscreen"></i></li>
                             <li id="full-view-exit"><i class="ti-zoom-out"></i></li>
                             <li class="dropdown">
-                                <i class="ti-bell dropdown-toggle" data-toggle="dropdown">
-                                    <span>2</span>
-                                </i>
+                                <i class="ti-bell dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"></i>
                                 <div class="dropdown-menu bell-notify-box notify-box">
-                                    <span class="notify-title">
-                                        You have 3 new notifications <a href="#">view all</a>
-                                    </span>
-                                    <div class="nofity-list">
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-key btn-danger"></i></div>
-                                            <div class="notify-text">
-                                                <p>You have Changed Your Password</p>
-                                                <span>Just Now</span>
-                                            </div>
-                                        </a>
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-comments-smiley btn-info"></i></div>
-                                            <div class="notify-text">
-                                                <p>New Commetns On Post</p>
-                                                <span>30 Seconds ago</span>
-                                            </div>
-                                        </a>
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-key btn-primary"></i></div>
-                                            <div class="notify-text">
-                                                <p>Some special like you</p>
-                                                <span>Just Now</span>
-                                            </div>
-                                        </a>
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-comments-smiley btn-info"></i></div>
-                                            <div class="notify-text">
-                                                <p>New Commetns On Post</p>
-                                                <span>30 Seconds ago</span>
-                                            </div>
-                                        </a>
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-key btn-primary"></i></div>
-                                            <div class="notify-text">
-                                                <p>Some special like you</p>
-                                                <span>Just Now</span>
-                                            </div>
-                                        </a>
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-key btn-danger"></i></div>
-                                            <div class="notify-text">
-                                                <p>You have Changed Your Password</p>
-                                                <span>Just Now</span>
-                                            </div>
-                                        </a>
-                                        <a href="#" class="notify-item">
-                                            <div class="notify-thumb"><i class="ti-key btn-danger"></i></div>
-                                            <div class="notify-text">
-                                                <p>You have Changed Your Password</p>
-                                                <span>Just Now</span>
-                                            </div>
-                                        </a>
-                                    </div>
+                                    <span class="notify-title"></span>
+                                    <div class="notify-list"></div>
                                 </div>
                             </li>
                             <li class="settings-btn">
@@ -149,20 +94,24 @@
             </div>
             <!-- header area end -->
             <div class="main-content-inner">
-                {% block main-content %}
-                {% endblock %}
+                {% block main-content %}{% endblock %}
             </div>
         </div>
         <!-- warning toast area start -->
         <div class="toast-container show position-fixed bottom-0 end-0 p-3" data-bs-autohide="false"></div>
         <!-- warning toast area end -->
+        <!-- alert area start -->
+        <div class="alert-dismiss position-fixed top-0 mt-2 start-0 end-0 d-flex"></div>
+        <!-- alert area end -->
     </div>
 {% endblock %}
 
 {% block script %}
     <script>
+        let warningNumURL = "{% url 'detect:unhandled-warning' %}"
         let warningListenURL = "{% url 'detect:warning-listen' %}"
-        let monitorInfoULD = "{% url 'monitor:info' 0 %}"
+        let monitorInfoURL = "{% url 'monitor:info' 0 %}"
+        let viewWarningURL = ""
     </script>
     <script src="{% static 'base-home/base-home.js' %}"></script>
 {% endblock script %}

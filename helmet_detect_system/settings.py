@@ -47,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "detect.middlewares.MessageMiddleware",
 ]
 
 ROOT_URLCONF = "helmet_detect_system.urls"
@@ -128,3 +129,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
+
+# My settings
+MODEL_YOLOv8_PATH = "yolo_models/helmet_yolov8n.pt"
+
+RESULT_SAVE_PATH = "detect-results/"
+
+DETECT_IMAGE_TYPE = ".jpg"
+
+PUBLISH_INTERVAL = 0.25
+
+SUB_TIMEOUT_INTERVAL = 120
+
+SUB_CLEAN_INTERVAL = 20
+
+CONTINUOUS_MONITORING_INTERVAL = 15

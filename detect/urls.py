@@ -5,6 +5,7 @@ from . import views, api
 app_name = "detect"
 
 urlpatterns = [
-    path('api/stream/<int:key>', views.stream_detected, name="stream"),
-    path('api/warning/listen', api.get_warning, name="warning-listen"),
+    path('api/warning/listen', api.warning_listen, name="warning-listen"),
+    path('api/detect/<int:monitor_id>/review', api.review_detect, name="review"),
+    path('api/warning/unhandled', api.unhandled_warning_num, name="unhandled-warning"),
 ]

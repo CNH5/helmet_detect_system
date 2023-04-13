@@ -7,7 +7,8 @@ let monitorReviewBtn = $("#btn-monitor-review")
 let loadingReview = $("#loading-review")
 let addMonitorForm = $("#form-monitor-add")
 let addFilterBtn = $("#btn-add-filter")
-let orderIdList = ["pk", "name", "create-date"]
+let orderChangeBtn = $("#order-change")
+let filterBadge = $("span.badge")
 
 class TableData {
     constructor() {
@@ -89,12 +90,25 @@ class QueryParams {
         this.currentPage = 1
         this.pageSize = 10
         this.queryName = ""
-        this.order = "-" + orderIdList[0]
+        this.orderKey = "pk"
+        this.orderPref = "-"
         this.filter = []
     }
 
-    changeOrder(order) {
-        this.order = this.order === order ? order.slice(1) : order;
+    changeOrderKey(key) {
+        this.orderKey = key
+        this.currentPage = 1;
+        refreshTable()
+    }
+
+    changeOrderPref() {
+        if (this.orderPref === "-") {
+            this.orderPref = ""
+            orderChangeBtn.html("<i class='ti-bar-chart'></i>")
+        } else {
+            this.orderPref = "-"
+            orderChangeBtn.html("<i class='ti-bar-chart-alt'></i>")
+        }
         this.currentPage = 1;
         refreshTable()
     }
@@ -119,7 +133,7 @@ function refreshTable() {
         data: {
             currentPage: queryParams.currentPage,
             pageSize: queryParams.pageSize,
-            order: queryParams.order,
+            order: queryParams.orderPref + queryParams.orderKey,
             info: queryParams.queryName,
             filter: JSON.stringify(queryParams.filter.filter(f => {
                 return f["value"] !== ""
@@ -129,7 +143,6 @@ function refreshTable() {
             queryParams.currentPage = data["currentPage"]
             tableData.setMonitors(data["monitorList"])
             tableData.changePageNums(data["pageNums"])
-            drawOrder()
         },
         error: function (e) {
             alert(e)
@@ -149,18 +162,34 @@ function drawTable() {
             "<input type='checkbox' name='chk'> " + "<span>" + data[i].pk + "</span>" +
             "</label>" +
             "</th>" +
-            "<td class='table-row-clickable'>" + data[i].name + "</td>" +
-            "<td class='table-row-clickable'>" + data[i].create_date + "</td>" +
-            "<td class='table-row-clickable'>" + data[i].source + "</td>" +
-            "<td>" +
+            "<td class='clickable table-row-clickable'>" + data[i].name + "</td>" +
+            "<td class='clickable table-row-clickable'>" + data[i].create_date + "</td>" +
+            "<td class='clickable table-row-clickable'>" + data[i].source + "</td>" +
+            "<td class='text-center'>" +
             "<label class='form-check-label form-switch helmet-detect-switch'>" +
             "<input class='form-check-input' type='checkbox' name='det' role='switch' " +
             (data[i].helmet_detect ? "checked" : "") + ">" +
             "</label>" +
             "</td>" +
+            "<td>" +
+            "<ul class='d-flex justify-content-center'>" +
+            "<li class='me-3'><i class='clickable table-row-clickable fa fa-edit text-secondary'></i></li>" +
+            "<li><i class='ti-trash text-danger'></i></li>" +
+            "</ul>" +
+            "</td>" +
             " </tr>"
         )
     }
+}
+
+function getEffectiveFilterNum() {
+    let count = 0
+    for (let i = 0; i < queryParams.filter.length; i++) {
+        if (queryParams.filter[i].value !== "") {
+            count++
+        }
+    }
+    return count
 }
 
 // 获取分页栏的html
@@ -229,39 +258,6 @@ function drawPagination() {
 // 判断class中是否包含disabled
 function isDisabled(node) {
     return node.attr("class").split(" ").indexOf("disabled") >= 0
-}
-
-// 显示当前顺序
-function drawOrder() {
-    let l2s = queryParams.order[0] === "-"
-    let order = (l2s ? queryParams.order.slice(1) : queryParams.order).replace("_", "-")
-    for (let i = 0; i < orderIdList.length; i++) {
-        let o = orderIdList[i]
-        let icon
-        if (order !== o) {
-            icon =
-                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" ' +
-                'class="bi bi-chevron-contract" viewBox="0 0 16 16">' +
-                '<path fill-rule="evenodd" ' +
-                'd="M3.646 13.854a.5.5 0 0 0 .708 0L8 10.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708zm0-11.708a.5.5 0 0 1 .708 0L8 5.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708z"/>' +
-                '</svg>'
-        } else if (l2s) {
-            icon =
-                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" ' +
-                'class="bi bi-caret-down-fill" viewBox="0 0 16 16">' +
-                '<path ' +
-                'd="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>' +
-                '</svg>'
-        } else {
-            icon =
-                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" ' +
-                'class="bi bi-caret-up-fill" viewBox="0 0 16 16">' +
-                '<path ' +
-                'd="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>' +
-                '</svg>'
-        }
-        $("#" + o).find(".table-header-right").html(icon)
-    }
 }
 
 // 修改安全帽检测状态
@@ -340,13 +336,6 @@ $(() => {
 })
 
 // 监听
-for (let i = 0; i < orderIdList.length; i++) {
-    let order = orderIdList[i]
-    $("#" + order).click(() => {
-        queryParams.changeOrder("-" + order.replace("-", "_"))
-    })
-}
-
 monitorsList.on("click", ".table-row-clickable", function () {
     let index = $(this).parent().index()
     window.location.href = monitorInfoURL.replace("0", tableData.getMonitorId(index))
@@ -536,7 +525,7 @@ monitorReviewBtn.click(function () {
         success: function (data) {
             let src
             if (data["connected"]) {
-                src = monitorReviewURL + "?token=" + data["token"]
+                src = reviewSourceURL + "?token=" + data["token"]
             } else {
                 // 提示源无效
                 src = "/static/img/404.jpeg"
@@ -626,6 +615,13 @@ filterList.on("change keydown", ".value-input", function () {
     if (that.value !== "") {
         refreshTable()
     }
+    let filterNum = getEffectiveFilterNum()
+    if (filterNum === 0) {
+        filterBadge.addClass("d-none")
+    } else {
+        filterBadge.removeClass("d-none")
+        filterBadge.html(filterNum)
+    }
 })
 
 filterList.on("click", ".remove-filter", function () {
@@ -636,7 +632,18 @@ filterList.on("click", ".remove-filter", function () {
         addFilterBtn.children("span").html("添加筛选器")
         filterList.html("<span class='no-filter-text mt-2'>未启用筛选</span>")
     }
+    if (getEffectiveFilterNum() === 0) {
+        filterBadge.addClass("d-none")
+    }
     if (filterItem.find(".value-input").value !== "") {
         refreshTable()
     }
+})
+
+$("#order-select").change(function () {
+    queryParams.changeOrderKey($(this)[0].value)
+})
+
+orderChangeBtn.click(function () {
+    queryParams.changeOrderPref()
 })

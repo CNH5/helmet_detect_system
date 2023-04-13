@@ -1,3 +1,7 @@
 .nav-btn {
     margin-top: 5px;
 }
+
+.fa-times {
+    cursor: pointer;
+}

@@ -2,7 +2,7 @@ from django import forms
 from . import validators
 
 
-class InfoForm(forms.Form):
+class InsertForm(forms.Form):
     name = forms.CharField(
         min_length=1,
         max_length=20,
@@ -21,6 +21,23 @@ class InfoForm(forms.Form):
         required=False,
         error_messages={
             "invalid": "detect字段有误",
+        },
+    )
+
+
+class InfoUpdateForm(forms.Form):
+    name = forms.CharField(
+        min_length=1,
+        max_length=20,
+        error_messages={
+            "required": "监控名不能为空",
+            "invalid": "监控名长度应在20个字符以内",
+        },
+    )
+    source = forms.CharField(
+        widget=forms.Textarea,
+        error_messages={
+            "required": "监控名不能为空",
         },
     )
 

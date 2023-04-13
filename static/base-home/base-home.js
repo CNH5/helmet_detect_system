@@ -1,24 +1,56 @@
 let toastContainer = $(".toast-container")
-let pageIsHidden = false
-let needGetWarning = true
+let alertContainer = $(".alert-dismiss")
+let warningNotify = $("li.dropdown")
 
-function getWarning() {
+let needGetWarning = true  // 标记当前界面是否需要获取警报
+
+function listenWarning() {
     $.ajax({
         method: "GET",
         url: warningListenURL,
         success: function (data) {
-            console.log(data)
-            if (data["warning"]) {
-                toastContainer.append(
-                    "<div class='toast show' role='alert' aria-atomic='true'>" +
-                    "<div class='toast-header'>" +
-                    "<div class='rounded me-2 bg-danger'><i class='ti-alert text-white ps-1 pe-1'></i></div>" +
-                    "<strong class='me-auto'>Bootstrap</strong>" +
-                    "<small class='text-muted'>just now</small>" +
-                    "<button type='button' class='btn-close close-toast' data-bs-dismiss='toast' aria-label='Close'></button>" +
-                    "</div>" +
-                    "<div class='toast-body'>" + "test" + "</div>" +
-                    "</div>"
+            if (data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let wm = data[i]
+                    // TODO: 容器过长时移除较早的toast
+                    toastContainer.append(
+                        "<div class='toast show' role='alert' aria-atomic='true'>" +
+                        "<div class='toast-header'>" +
+                        "<div class='rounded me-2 bg-danger'><i class='ti-alert text-white ps-1 pe-1'></i></div>" +
+                        "<strong class='me-auto'>检测到人员未佩戴安全帽!</strong>" +
+                        "<small class='text-muted mt-1'>刚刚</small>" +
+                        "<button type='button' class='btn-close close-toast' data-bs-dismiss='toast' aria-label='Close'></button>" +
+                        "</div>" +
+                        "<div class='toast-body row'>" +
+                        "<div class='col-md flex-grow-1 d-flex align-items-end'>" +
+                        "监控名：'" + wm["name"] + "'，监控ID：" + wm["id"] +
+                        "</div>" +
+                        "<button class='btn btn-outline-primary ms-auto btn-xs col-md-auto me-2 btn-see-warning'>" +
+                        "点此查看" +
+                        "</button>" +
+                        "</div>" +
+                        "<div class='d-none recv-time'>" + new Date() + "</div>" +
+                        "<div class='d-none m-id'>" + wm["id"] + "</div>" +
+                        "</div>"
+                    )
+                }
+            }
+        },
+        error: function (e) {
+            console.log(e)
+        }
+    })
+}
+
+function getWarningNum() {
+    $.ajax({
+        method: "GET",
+        url: warningNumURL,
+        success: function (data) {
+            if (data["count"] > 0) {
+                warningNotify.children("i.ti-bell").html("<span>" + data["count"] + "</span>")
+                warningNotify.children(".dropdown-menu").children(".notify-title").html(
+                    "有 " + data["count"] + " 条新的警报" + "<a href='" + viewWarningURL + "'>查看全部</a>"
                 )
             }
         },
@@ -28,41 +60,83 @@ function getWarning() {
     })
 }
 
+function getWarningList() {
+
+}
+
+function customAlert(type, title, info, timeout) {
+    let alt = $(
+        '<div class="alert alert-' + type + ' alert-dismissible fadeOut show d-inline-flex ms-auto me-auto" role="alert">' +
+        '<div class="alert-text-wrap">' +
+        '<strong class="alert-title">' + title + '</strong>' +
+        '<span class="alert-text">' + info + '</span>' +
+        '</div>' +
+        '<span class="fa fa-times ms-auto mt-1" data-bs-dismiss="alert" aria-label="Close"></span>' +
+        '</div>'
+    )
+    alertContainer.append(alt)
+    setTimeout(() => {
+        alt.remove()
+    }, timeout ? timeout : 3000)
+}
+
 $(() => {
-    // 页面计数
-    let pageNums = $.cookie("pageNums")
-    if (pageNums === null) {
-        $.cookie("pageNums", 1)
-    } else {
-        $.cookie("pageNums", pageNums + 1)
-    }
-    // 每秒获取一次警报信息
+    let pageNums = $.cookie("visiblePages") // 活跃页面计数
+    $.cookie("visiblePages", (pageNums ? parseInt(pageNums) : 0) + 1)
+    // 每1.5秒获取一次警报信息
     setInterval(function () {
-        pageNums = $.cookie("pageNums")
+        pageNums = parseInt($.cookie("visiblePages"))
         let pageIsVisible = document.visibilityState === "visible"
-        if (pageIsHidden && pageIsVisible) {
+        if (!needGetWarning && pageIsVisible) {
             // 不可见->可见
-            $.cookie("pageNums", ++pageNums)
+            $.cookie("visiblePages", ++pageNums)
             needGetWarning = true
-        } else if (!pageIsHidden && !pageIsVisible) {
-            // 可见->不可见
-            $.cookie("pageNums", --pageNums)
-            // 全部界面都不可见时，仍旧查询警报
-            needGetWarning = pageNums === 0
-        } else if (pageIsHidden && pageIsVisible) {
-            // 不可见->不可见
-            // 有其它界面活动,不需要获取警报
-            needGetWarning = pageNums === 0
-        } else {
-            // 可见->可见
-            // 不需要执行其他操作
+        } else if (needGetWarning && !pageIsVisible) {
+            if (pageNums === 1) {
+                // 可见->不可见，且所有界面都不可见时，仍旧查询警报
+                $.cookie("visiblePages", --pageNums)
+            } else if (pageNums > 0) {
+                // 不可见->不可见, 有其它界面可见,不需要获取警报
+                needGetWarning = false
+            }
         }
         if (needGetWarning) {
-            getWarning()
+            listenWarning()
         }
-    }, 1000)
+    }, 1500)  // 1.5秒监听似乎刚好合适
+
+    // 动态修改警报时间
+    setInterval(function () {
+        toastContainer.find(".toast").each(function () {
+            let timeNode = $(this).find("small.text-muted")
+            let t = new Date() - new Date($(this).find(".recv-time")[0].innerHTML)
+            if (t > 10000 && t < 60000) {
+                timeNode.html(Math.floor(t / 1000) + "秒前")
+            } else if (t >= 60000 && t < 3600000) {
+                timeNode.html(Math.floor(t / 60000) + "分钟前")
+            } else if (t > 3600000) {
+                timeNode.html(Math.floor(t / 3600000) + "小时前")
+            }
+        })
+    }, 10000)
+
+    getWarningNum()
 })
 
+window.onbeforeunload = function () {
+    let pageNums = parseInt($.cookie("visiblePages"))
+    $.cookie("visiblePages", --pageNums)
+}
+
 toastContainer.on("click", "button.close-toast", function () {
-    $(this).parent().parent().remove()
+    let toast = $(this).parent().parent()
+
+    toast.remove()
+})
+
+toastContainer.on("click", "button.btn-see-warning", function () {
+    let toast = $(this).parent().parent()
+    let monitor_id = toast.children(".m-id").html()
+    toast.remove()
+    window.open(monitorInfoURL.replace("0", monitor_id))
 })

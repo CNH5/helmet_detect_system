@@ -49,9 +49,9 @@
                     <!-- 批量操作 area end -->
                     <!-- filter area start -->
                     <div class="btn-group ms-2" role="group">
-                        <button class="btn btn-outline-primary btn-sm dropdown-toggle btn-dropdown"
+                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle btn-dropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
-                            筛选
+                            筛选 <span class="badge text-bg-secondary d-none">0</span>
                         </button>
                         <div id="filter-content" class="dropdown-menu">
                             <div id="filter-list">
@@ -198,7 +198,6 @@
     {{ block.super }}
     <script>
         let monitorQueryURL = "{% url 'monitor:query' %}"
-        let monitorInfoURL = "{% url "monitor:info" 0 %}"
         let monitorInsertURL = "{% url 'monitor:insert' %}"
         let monitorDeleteURL = "{% url 'monitor:delete' %}"
         let monitorDetectChangeURL = "{% url 'monitor:update-detect' %}"
