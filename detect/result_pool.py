@@ -82,7 +82,7 @@ def _generate_detected_frame(monitor: Monitor):
                 head_without_helmet=_values.now_head_without_helmet,
             )
             r.img.save(
-                f"{settings.RESULT_SAVE_PATH}m-{monitor.pk}-{time.time()}{settings.DETECT_IMAGE_TYPE}",
+                f"monitor-{monitor.pk}-{time.time()}{settings.DETECT_IMAGE_TYPE}",
                 ContentFile(frame),
                 save=True
             )
@@ -149,5 +149,5 @@ def yield_detected_frame(key):
         return []
 
 
-for m in Monitor.objects.filter(helmet_detect=True):
-    add_thread(m)
+# for m in Monitor.objects.filter(helmet_detect=True):
+#     add_thread(m)

@@ -8,11 +8,14 @@ class Result(models.Model):
     person = models.IntegerField(default=0)
     head_without_helmet = models.IntegerField(default=0)
     head_with_helmet = models.IntegerField(default=0)
-    img = models.ImageField(null=True)
+    img = models.ImageField(null=True, upload_to="images/detected/%Y-%m-%d/")
 
     def to_json(self):
         return {
+            "id": self.pk,
             "person": self.person,
+            "detect_time": self.detect_time.strftime("%Y年%m月%d日 %H:%M:%S"),
             "head_without_helmet": self.head_without_helmet,
             "head_with_helmet": self.head_with_helmet,
+            "img": self.img,
         }

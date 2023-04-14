@@ -15,9 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.views.static import serve
+
+from helmet_detect_system import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     re_path(r"^", include("detect.urls")),
     re_path(r"^", include("monitor.urls")),
+
+    re_path(r'^media/(?P<path>.*)$', serve, kwargs={'document_root': settings.MEDIA_ROOT}),
 ]

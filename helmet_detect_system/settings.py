@@ -68,6 +68,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.media",
             ],
         },
     },
@@ -130,10 +131,15 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
 
-# My settings
-MODEL_YOLOv8_PATH = "yolo_models/helmet_yolov8n.pt"
+# Media files
+MEDIA_ROOT = "media"
 
-RESULT_SAVE_PATH = "detect-results/"
+MEDIA_URL = "media/"
+
+# My settings
+YOLO_MODEL_PATH = "yolo_models/"
+
+MODEL_YOLOv8_PATH = YOLO_MODEL_PATH + "helmet_yolov8n.pt"
 
 DETECT_IMAGE_TYPE = ".jpg"
 
