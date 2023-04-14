@@ -58,7 +58,7 @@ def _generate_detected_frame(monitor: Monitor):
         has_detected = len(cls) > 0
         now = time.time()
 
-        if (detect_has_change and has_detected) or now > _values.next_warning_time:
+        if (detect_has_change or now > _values.next_warning_time) and has_detected:
             _values.need_warning = _values.now_head_without_helmet > 0
             if _values.need_warning:
                 _values.next_warning_time = now + settings.CONTINUOUS_MONITORING_INTERVAL
@@ -149,5 +149,5 @@ def yield_detected_frame(key):
         return []
 
 
-# for m in Monitor.objects.filter(helmet_detect=True):
-#     add_thread(m)
+for m in Monitor.objects.filter(helmet_detect=True):
+    add_thread(m)

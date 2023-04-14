@@ -8,7 +8,7 @@
 {% block breadcrumbs %}
     <ul class="breadcrumbs pull-left">
         <li><a href="{% url 'monitor:manage' %}">监控列表</a></li>
-        <li><span>{{ monitor.name }}</span></li>
+        <li><span class="monitor-name">{{ monitor.name }}</span></li>
     </ul>
 {% endblock %}
 
@@ -19,9 +19,9 @@
                 <video class="source-video border" src=""></video>
             </div>
             <div class="col-3">
-                <div class="form-title navbar mb-3 rounded-1">
-                    <div class="ms-2">监控信息</div>
-                    <div class="me-2 justify-content-end">
+                <div class="form-title mb-3 rounded-1 d-inline-flex w-100">
+                    <div class="ms-2 fs-6 mt-2 mb-2">监控信息</div>
+                    <div class="operation-area me-2 ms-auto mt-auto mb-auto d-inline-flex">
                         <a href="javascript:" class="btn-edit-info text-white" title="编辑监控信息">编辑</a>
                     </div>
                 </div>
