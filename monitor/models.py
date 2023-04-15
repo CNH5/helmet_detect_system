@@ -2,7 +2,7 @@ from django.db import models
 
 
 # Create your models here.
-class Monitor(models.Model):
+class Info(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=20, null=False)
     source = models.TextField(null=False, default="")

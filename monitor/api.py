@@ -15,7 +15,7 @@ from detect import result_pool
 from . import utils
 from .forms import *
 
-from .models import Monitor
+from .models import Info as MonitorInfo
 from .validators import integer_pattern
 
 
@@ -36,7 +36,7 @@ def insert(request):
             "msg": form.errors
         })
     data = form.cleaned_data
-    monitor = Monitor(
+    monitor = MonitorInfo(
         name=data.get("name"),
         source=data.get("source"),
         helmet_detect=data.get("detect")
@@ -60,8 +60,9 @@ def delete(request):
             "msg": form.errors
         })
     data = form.cleaned_data
-    monitors = Monitor.objects.filter(pk__in=data.get("pk_list"))
-    if (n := monitors.delete()) > 0:
+    monitors = MonitorInfo.objects.filter(pk__in=data.get("pk_list"))
+    n, _ = monitors.delete()
+    if n > 0:
         for monitor in monitors:
             result_pool.remove_thread(monitor.pk)
     return JsonResponse({"msg": f"删除了 {n} 条数据"})
@@ -80,7 +81,7 @@ def update_info(request, monitor_id: int):
         })
 
     data = form.cleaned_data
-    monitor = Monitor.objects.get(pk=monitor_id)
+    monitor = MonitorInfo.objects.get(pk=monitor_id)
     monitor.name = data.get("name")
     monitor.source = data.get("source")
     monitor.save()
@@ -105,7 +106,7 @@ def update_detect(request):
     pk_list = data.get("pk_list")
     detect = data.get("detect")
 
-    monitors = Monitor.objects.filter(
+    monitors = MonitorInfo.objects.filter(
         pk__in=pk_list,
         helmet_detect=not detect
     )
@@ -167,13 +168,12 @@ def query(request):
     查询监控设备
     """
     current_page = request.GET.get("currentPage", 1)
-    page_size = request.GET.get("pageSize", 10)
     order = request.GET.get("order", "-pk")
     query_filter = json.loads(request.GET.get("filter", "[]"))
     query_filter = load_filter(query_filter)
 
-    monitor_list = Monitor.objects.filter(query_filter).order_by(order)
-    paginator = Paginator(monitor_list, page_size)
+    monitor_list = MonitorInfo.objects.filter(query_filter).order_by(order)
+    paginator = Paginator(monitor_list, request.GET.get("pageSize", 10))
     try:
         monitor_list = paginator.page(current_page)
     except PageNotAnInteger:
@@ -193,7 +193,7 @@ def query(request):
 
 @require_GET
 def test_exists_source(request):
-    monitor = Monitor.objects.get(pk=int(request.GET.get("pk", 0)))
+    monitor = MonitorInfo.objects.get(pk=int(request.GET.get("pk", 0)))
     source = int(monitor.source) if integer_pattern.match(monitor.source) else monitor.source
     return JsonResponse({"connected": cv2.VideoCapture(source, cv2.CAP_DSHOW).isOpened()})
 

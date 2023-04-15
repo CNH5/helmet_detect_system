@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Monitor
+from .models import Info as MonitorInfo
 from django.core.paginator import Paginator
 
 
@@ -9,7 +9,7 @@ def manage(request):
     """
     监控设备管理界面
     """
-    paginator = Paginator(Monitor.objects.all().order_by("pk"), 10)
+    paginator = Paginator(MonitorInfo.objects.all().order_by("pk"), 10)
     content = {
         "monitor_list": paginator.page(1),
         "page_nums": paginator.num_pages,
@@ -21,8 +21,4 @@ def info(request, monitor_id: int):
     """
     监控信息界面
     """
-    content = {
-        "monitor": Monitor.objects.get(pk=monitor_id),
-        "record": None,
-    }
-    return render(request, "monitor/info.html", content)
+    return render(request, "monitor/info.html", {"monitor": MonitorInfo.objects.get(pk=monitor_id)})

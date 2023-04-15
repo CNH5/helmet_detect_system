@@ -7,7 +7,7 @@ import zmq
 from django.core.files.base import ContentFile
 
 from helmet_detect_system import settings
-from monitor.models import Monitor
+from monitor.models import Info as MonitorInfo
 from .models import Result
 from .yolo import ModelYOLOv8, PERSON, HEAD_WITH_HELMET, HEAD_WITHOUT_HELMET
 from .message import PULL_PORT
@@ -17,7 +17,7 @@ _running = True
 _values = threading.local()
 
 
-def _generate_detected_frame(monitor: Monitor):
+def _generate_detected_frame(monitor: MonitorInfo):
     data = _data[monitor.pk]
     model = ModelYOLOv8()
 
@@ -149,5 +149,5 @@ def yield_detected_frame(key):
         return []
 
 
-# for m in Monitor.objects.filter(helmet_detect=True):
+# for m in MonitorInfo.objects.filter(helmet_detect=True):
 #     add_thread(m)

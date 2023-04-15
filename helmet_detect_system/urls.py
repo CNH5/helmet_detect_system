@@ -24,5 +24,5 @@ urlpatterns = [
     re_path(r"^", include("detect.urls")),
     re_path(r"^", include("monitor.urls")),
 
-    re_path(r'^media/(?P<path>.*)$', serve, kwargs={'document_root': settings.MEDIA_ROOT}),
+    re_path("^" + settings.MEDIA_URL + "(?P<path>.*)$", serve, kwargs={'document_root': settings.MEDIA_ROOT}),
 ]

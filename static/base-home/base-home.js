@@ -69,7 +69,7 @@ function customAlert(type, title, info, timeout) {
         '<div class="alert alert-' + type + ' alert-dismissible fadeOut show d-inline-flex ms-auto me-auto" role="alert">' +
         '<div class="alert-text-wrap">' +
         '<strong class="alert-title">' + title + '</strong>' +
-        '<span class="alert-text">' + info + '</span>' +
+        '<span class="alert-text ms-1">' + info + '</span>' +
         '</div>' +
         '<span class="fa fa-times ms-auto mt-1" data-bs-dismiss="alert" aria-label="Close"></span>' +
         '</div>'
@@ -138,5 +138,5 @@ toastContainer.on("click", "button.btn-see-warning", function () {
     let toast = $(this).parent().parent()
     let monitor_id = toast.children(".m-id").html()
     toast.remove()
-    window.open(monitorInfoURL.replace("0", monitor_id))
+    window.open(monitorInfoURL.replace("0", monitor_id) + "#head_without_helmet")
 })
