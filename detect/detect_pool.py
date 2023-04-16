@@ -109,7 +109,7 @@ def remove_thread(key: int):
     if data := _data.get(key):
         if _running:
             data["event"].set()
-        del data[key]
+        del _data[key]
 
 
 def terminate():
@@ -149,5 +149,5 @@ def yield_detected_frame(key):
         return []
 
 
-# for m in MonitorInfo.objects.filter(helmet_detect=True):
-#     add_thread(m)
+def get_detected_frame(key):
+    return data["frame"] if (data := _data.get(key)) and data["thread"].is_alive() else None

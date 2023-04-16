@@ -1,3 +1,4 @@
+// elements
 let infoForm = $(".update-form")
 let operationArea = $(".operation-area")
 let formTitle = $(".form-title")
@@ -10,7 +11,7 @@ let allCheckBox = $("input[name=all-check-box]")
 let deleteCheckedBtn = $(".delete-checked-btn")
 let paginationArea = $(".pagination-area")
 
-
+// params
 let currentPage = 1
 let pageSize = 10
 let ascendingOrder = true
@@ -62,8 +63,8 @@ function getResultsData(successCallback, errorCallback) {
         data: queryData(),
         success: function (data) {
             currentPage = data["currentPage"]
-            pageNums = data["pageNums"]
             resultDataList = data["resultList"]
+            pageNums = resultDataList.length === 0 ? 0 : data["pageNums"]
 
             setPaginationHTML()
             resultList.html("")
@@ -338,4 +339,33 @@ paginationArea.on("keydown", "#page-num-input", function (e) {
         currentPage = this.value
         getResultsData()
     }
+})
+
+$("input[name=detect]").click(function () {
+    let that = this
+    $.ajax({
+        method: "POST",
+        traditional: true,
+        url: switchModificationURL,
+        data: {
+            idList: [monitorId],
+            detect: that.checked,
+            csrfmiddlewaretoken: csrfToken,
+        },
+        success: function (data) {
+            customAlert(
+                "success",
+                (that.checked ? "开启" : "关闭") + "安全帽检测成功！",
+                data["msg"]
+            )
+        },
+        error: function (e) {
+            $(that).prop("checked", !that.checked)
+            customAlert(
+                "danger",
+                (that.checked ? "开启" : "关闭") + "安全帽检测失败！",
+                e
+            )
+        }
+    })
 })

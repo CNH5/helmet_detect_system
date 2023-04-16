@@ -201,9 +201,9 @@
         let monitorInsertURL = "{% url 'monitor:insert' %}"
         let monitorDeleteURL = "{% url 'monitor:delete' %}"
         let monitorDetectChangeURL = "{% url 'monitor:update-detect' %}"
-        let reviewSourceURL = "{% url 'monitor:new-source-review' %}"
-        let existsSourceTestURL = "{% url 'monitor:exists-source-test' %}"
         let newSourceTestURL = "{% url 'monitor:new-source-test' %}"
+        let reviewSourceURL = "{% url 'monitor:new-source-review' %}"
+        let existsSourceTestURL = "{% url 'monitor:source-test' 0 %}"
         let csrfToken = "{{ csrf_token }}"
     </script>
     <script src="{% static "monitor/manage/manage.js" %}"></script>

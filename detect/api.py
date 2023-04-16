@@ -1,28 +1,14 @@
-import cv2
 import zmq
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db import transaction
 from django.db.models import Sum, Q
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from monitor.models import Info as MonitorInfo
 from .message import SUB_POOL
 from .models import Result
-from . import result_pool
-
-
-@require_GET
-def review_detect(_, monitor_id):
-    def display_frame(frames):
-        for frame in frames:
-            ret, img = cv2.imencode('.jpeg', frame)
-            if ret:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + img.tobytes() + b'\r\n')
-
-    detected_frames = result_pool.yield_detected_frame(monitor_id)
-    return StreamingHttpResponse(display_frame(detected_frames),
-                                 content_type='multipart/x-mixed-replace; boundary=frame')
+from . import detect_pool
 
 
 @require_GET
@@ -101,3 +87,18 @@ def delete_results(request):
         result.img.delete(save=False)
     n, _ = results.delete()
     return JsonResponse({"msg": f"删除了 {n} 条数据"})
+
+
+@require_POST
+@transaction.atomic
+def detection_switch_modification(request):
+    id_list = request.POST.getlist("idList", [])
+    detect = request.POST.get("detect") in ["true", "True", True, 1]
+    modified_monitor = MonitorInfo.objects.all().filter(id__in=id_list)
+    if (n := modified_monitor.update(helmet_detect=detect)) > 0:
+        for m in modified_monitor:
+            if detect:
+                detect_pool.add_thread(m)
+            else:
+                detect_pool.remove_thread(m.pk)
+    return JsonResponse({"msg": f"修改了 {n} 条数据"})

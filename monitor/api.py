@@ -5,18 +5,19 @@ import cv2
 import jwt
 from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_GET
 from jwt import InvalidSignatureError
 
-from detect import result_pool
+from detect import detect_pool
 from . import utils
 from .forms import *
 
 from .models import Info as MonitorInfo
-from .validators import integer_pattern
+from .validators import INTEGER_PATTERN
 
 
 def token_invalid(data, request):
@@ -25,27 +26,22 @@ def token_invalid(data, request):
 
 
 @require_POST
+@transaction.atomic
 def insert(request):
     """
     添加监控设备
     """
     form = InsertForm(request.POST)
     if not form.is_valid():
-        return JsonResponse({
-            "code": 403,
-            "msg": form.errors
-        })
+        return JsonResponse({"code": 403, "msg": form.errors})
     data = form.cleaned_data
-    monitor = MonitorInfo(
+    monitor = MonitorInfo.objects.create(
         name=data.get("name"),
         source=data.get("source"),
         helmet_detect=data.get("detect")
     )
-    monitor.save()
-    return JsonResponse({
-        "code": 200,
-        "msg": "监控设备添加成功!"
-    })
+    detect_pool.add_thread(monitor)
+    return JsonResponse({"code": 200, "msg": "监控设备添加成功!"})
 
 
 @require_POST
@@ -64,7 +60,7 @@ def delete(request):
     n, _ = monitors.delete()
     if n > 0:
         for monitor in monitors:
-            result_pool.remove_thread(monitor.pk)
+            detect_pool.remove_thread(monitor.pk)
     return JsonResponse({"msg": f"删除了 {n} 条数据"})
 
 
@@ -75,20 +71,14 @@ def update_info(request, monitor_id: int):
     """
     form = InfoUpdateForm(request.POST)
     if not form.is_valid():
-        return JsonResponse({
-            "code": 403,
-            "msg": form.errors
-        })
+        return JsonResponse({"code": 403, "msg": form.errors})
 
     data = form.cleaned_data
     monitor = MonitorInfo.objects.get(pk=monitor_id)
     monitor.name = data.get("name")
     monitor.source = data.get("source")
     monitor.save()
-    return JsonResponse({
-        "code": 200,
-        "msg": "监控信息修改成功!"
-    })
+    return JsonResponse({"code": 200, "msg": "监控信息修改成功!"})
 
 
 @require_POST
@@ -98,10 +88,7 @@ def update_detect(request):
     """
     form = DetectUpdateForm(request.POST)
     if not form.is_valid():
-        return JsonResponse({
-            "code": 403,
-            "msg": form.errors
-        })
+        return JsonResponse({"code": 403, "msg": form.errors})
     data = form.cleaned_data
     pk_list = data.get("pk_list")
     detect = data.get("detect")
@@ -115,13 +102,10 @@ def update_detect(request):
     if (n := monitors.update(helmet_detect=detect)) > 0:
         for monitor in monitors:
             if detect:
-                result_pool.add_thread(monitor)
+                detect_pool.add_thread(monitor)
             else:
-                result_pool.remove_thread(monitor.pk)
-    return JsonResponse({
-        "code": 200,
-        "msg": f"修改了 {n} 条数据"
-    })
+                detect_pool.remove_thread(monitor.pk)
+    return JsonResponse({"code": 200, "msg": f"修改了 {n} 条数据"})
 
 
 def load_filter(query_filter: list[dict]) -> Q:
@@ -192,16 +176,16 @@ def query(request):
 
 
 @require_GET
-def test_exists_source(request):
-    monitor = MonitorInfo.objects.get(pk=int(request.GET.get("pk", 0)))
-    source = int(monitor.source) if integer_pattern.match(monitor.source) else monitor.source
+def test_source(request, monitor_id):
+    monitor = MonitorInfo.objects.get(pk=monitor_id)
+    source = int(monitor.source) if INTEGER_PATTERN.match(monitor.source) else monitor.source
     return JsonResponse({"connected": cv2.VideoCapture(source, cv2.CAP_DSHOW).isOpened()})
 
 
 @require_GET
 def test_new_source(request):
     source = request.GET.get("source", "")
-    if integer_pattern.match(source):
+    if INTEGER_PATTERN.match(source):
         source = int(source)
     if cv2.VideoCapture(source, cv2.CAP_DSHOW).isOpened():
         response = {
@@ -236,3 +220,24 @@ def new_source_review(request):
             return redirect("/static/img/404.jpeg")
     except InvalidSignatureError:
         return redirect("/static/img/403.png")
+
+
+@require_GET
+def review_source(_, monitor_id):
+    def display_frame():
+        cap = None
+        while True:
+            if (frame := detect_pool.get_detected_frame(monitor_id)) is None:
+                if cap is None:
+                    m = MonitorInfo.objects.get(id=monitor_id)
+                    source = int(m.source) if INTEGER_PATTERN.match(m.source) else m.source
+                    cap = cv2.VideoCapture(source)
+                ret, frame = cap.read()
+                if not ret:
+                    break
+            ret, img = cv2.imencode('.jpeg', frame)
+            if ret:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + img.tobytes() + b'\r\n')
+
+    return StreamingHttpResponse(display_frame(), content_type='multipart/x-mixed-replace; boundary=frame')

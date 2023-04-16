@@ -17,8 +17,10 @@
     <!-- monitor area start -->
     <div class="card mt-4">
         <div class="card-body row">
-            <div class="col-9">
-                <video class="source-video border" src=""></video>
+            <div class="col-9 ">
+                <div class="source-video text-center border bg-black">
+                    <img class="" src="{% url 'monitor:source-review' monitor.id %}" alt="#">
+                </div>
             </div>
             <!-- monitor info area start -->
             <div class="col-3">
@@ -40,9 +42,11 @@
                                   name="source" disabled>{{ monitor.source }}</textarea>
                     </div>
                     <div class="form-check form-switch">
-                        <label class="form-check-label" for="helmet-detect-checkbox">安全帽检测</label>
-                        <input class="form-check-input" type="checkbox" role="switch" id="helmet-detect-checkbox"
-                               name="detect" {% if monitor.helmet_detect %}checked{% endif %}>
+                        <label class="form-check-label">
+                            安全帽检测
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   name="detect" {% if monitor.helmet_detect %}checked{% endif %}>
+                        </label>
                     </div>
                 </form>
             </div>
@@ -173,6 +177,7 @@
         let infoUpdateURL = "{% url 'monitor:update' monitor.id %}"
         let resultsQueryURL = "{% url 'detect:results-query' %}"
         let deleteResultsURL = "{% url 'detect:results-delete' %}"
+        let switchModificationURL = "{% url 'detect:switch-modification' %}"
         let monitorId = "{{ monitor.id }}"
         let originMonitorName = "{{ monitor.name }}"
         let originMonitorSource = "{{ monitor.source }}"
