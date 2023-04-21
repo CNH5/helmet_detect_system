@@ -36,3 +36,7 @@ def multiview(request):
     return render(request, "monitor/multiview.html", {
         "reviewMonitor": monitors
     })
+
+
+def create(request):
+    return render(request, "monitor/create.html")

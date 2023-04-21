@@ -1,0 +1,16 @@
+.form-create-monitor {
+    width: 40%;
+}
+
+.source-review-area {
+    width: 60%;
+}
+
+#monitor-source {
+    height: 230px;
+}
+
+#source-img-wrap {
+    width: 100%;
+    aspect-ratio: 16/9;
+}

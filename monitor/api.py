@@ -40,7 +40,8 @@ def insert(request):
         source=data.get("source"),
         helmet_detect=data.get("detect")
     )
-    detect_pool.add_thread(monitor)
+    if data.get("detect"):
+        detect_pool.add_thread(monitor)
     return JsonResponse({"code": 200, "msg": "监控设备添加成功!"})
 
 

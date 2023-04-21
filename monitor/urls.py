@@ -8,6 +8,7 @@ _view_urlpatterns = [
     path("manage/", views.manage, name="manage"),
     path("<int:monitor_id>/info/", views.info, name="info"),
     path("multiview/", views.multiview, name="multiview"),
+    path("create/", views.create, name="create"),
 ]
 
 urlpatterns = [

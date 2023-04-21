@@ -98,10 +98,9 @@
                                       fill="currentColor"></path>
                             </svg>
                         </button>
-                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="offcanvas"
-                                data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
+                        <a class="btn btn-outline-primary btn-sm" href="{% url 'monitor:create' %}">
                             添加监控
-                        </button>
+                        </a>
                     </div>
                 </div>
                 <!-- table options end -->
@@ -133,78 +132,14 @@
             </div>
         </div>
     </div>
-    <!-- insert monitor offcanvas start -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasRightLabel">添加监控设备</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body border-top">
-            <form id="form-monitor-add">
-                <div class="input-group-sm mb-3 row">
-                    <label for="monitor-name" class="col-sm-3 col-form-label">监控名</label>
-                    <div class="col-sm-9">
-                        <input type="text" placeholder="1~20个字" maxlength="20" required
-                               id="monitor-name" name="name" class="form-control form-add-input">
-                        <div class="invalid-feedback">
-                            请填写监控名
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-3 row">
-                    <label class="col-sm-3 col-form-label" for="monitor-source">监控源</label>
-                    <div class="col-sm-9">
-                    <textarea id="monitor-source" name="source" class="form-control form-add-input"
-                              placeholder="支持设备id、RTSP、 RTMP、 HTTP" required></textarea>
-                    </div>
-                    <div class="invalid-feedback">
-                        请填写监控源
-                    </div>
-                </div>
-                <div class="mb-3 row">
-                    <!-- source review start -->
-                    <div class="col-sm-3">
-                        <button id="btn-monitor-review" class="btn btn-outline-primary btn-sm disabled">
-                            监控预览
-                        </button>
-                    </div>
-                    <div class="col-sm-9">
-                        <div id="loading-review" role="status"
-                             class="spinner-grow spinner-grow-sm text-primary mt-2 visually-hidden">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <!-- source review end -->
-                </div>
-                <div class="mb-3">
-                    <div id="source-review" class="shadow-none bg-body-tertiary"></div>
-                </div>
-                <div class="mb-3">
-                    <input type="checkbox" class="form-check-input" id="detect-helmet" name="detect" checked>
-                    <label class="form-check-label" for="detect-helmet">安全帽佩戴检测</label>
-                </div>
-                <div class="submit-row border-top row">
-                    <div class="col-4"></div>
-                    <div class="col-4">
-                        <button type="submit" class="btn btn-primary">添加监控</button>
-                    </div>
-                    <div class="col-4"></div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- insert monitor offcanvas end -->
 {% endblock %}
 
 {% block script %}
     {{ block.super }}
     <script>
         let monitorQueryURL = "{% url 'monitor:query' %}"
-        let monitorInsertURL = "{% url 'monitor:insert' %}"
         let monitorDeleteURL = "{% url 'monitor:delete' %}"
         let monitorDetectChangeURL = "{% url 'monitor:update-detect' %}"
-        let newSourceTestURL = "{% url 'monitor:new-source-test' %}"
-        let reviewSourceURL = "{% url 'monitor:new-source-review' %}"
         let existsSourceTestURL = "{% url 'monitor:source-test' 0 %}"
         let csrfToken = "{{ csrf_token }}"
     </script>

@@ -14,7 +14,7 @@ class InsertForm(forms.Form):
     source = forms.CharField(
         widget=forms.Textarea,
         error_messages={
-            "required": "监控名不能为空",
+            "required": "监控源不能为空",
         },
     )
     detect = forms.BooleanField(

@@ -3,9 +3,6 @@ let pagination = $("#pagination")
 let allCheckBox = $("input[name=all-check-box]")
 let optionButton = $("#option-button")
 let filterList = $("#filter-list")
-let monitorReviewBtn = $("#btn-monitor-review")
-let loadingReview = $("#loading-review")
-let addMonitorForm = $("#form-monitor-add")
 let addFilterBtn = $("#btn-add-filter")
 let orderChangeBtn = $("#order-change")
 let filterBadge = $("span.badge")
@@ -468,81 +465,6 @@ addFilterBtn.click(function () {
         filter: "=",
         value: "",
     })
-})
-
-addMonitorForm.submit(function (event) {
-    event.preventDefault()
-    let that = $(this)
-    $.ajax({
-        method: "POST",
-        url: monitorInsertURL,
-        data: {
-            name: that.find("input[name=name]").val(),
-            source: that.find("textarea[name=source]").val(),
-            detect: that.find("input[name=detect]")[0].checked,
-            csrfmiddlewaretoken: csrfToken,
-        },
-        success: function (data) {
-            alert(data["msg"])
-            if (data["code"] === 403) {
-            } else if (data["code"] === 200) {
-                that[0].reset()
-                refreshTable()
-            }
-        },
-        error: function (e) {
-            console.log(e)
-        }
-    })
-})
-
-$("#monitor-name").on("keyup", function () {
-    let that = $(this)[0]
-    that.value = that.value.replace(/ /, "")
-})
-
-$("#monitor-source").on("keyup", function () {
-    let that = $(this)[0]
-    that.value = that.value.replace(/ /, "")
-    if (that.value.length > 0) {
-        monitorReviewBtn.removeClass("disabled")
-    } else {
-        monitorReviewBtn.addClass("disabled")
-    }
-})
-
-monitorReviewBtn.click(function () {
-    if (isDisabled($(this))) {
-        return false
-    }
-    let that = $(this)
-    loadingReview.removeClass("visually-hidden")
-    that.html("连接中...")
-    $.ajax({
-        method: "GET",
-        url: newSourceTestURL,
-        data: {
-            source: addMonitorForm.find("textarea[name=source]").val()
-        },
-        success: function (data) {
-            let src
-            if (data["connected"]) {
-                src = reviewSourceURL + "?token=" + data["token"]
-            } else {
-                // 提示源无效
-                src = "/static/img/404.jpeg"
-            }
-            $("#source-review").html("<img class='review-img' src='" + src + "' alt=''/>")
-            loadingReview.addClass("visually-hidden")
-            that.html("监控预览")
-        },
-        error: function (e) {
-            alert(e.message)
-            loadingReview.addClass("visually-hidden")
-            that.html("监控预览")
-        }
-    })
-    return false
 })
 
 filterList.on("change", ".operator-select", function () {

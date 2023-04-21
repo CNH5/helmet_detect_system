@@ -101,7 +101,7 @@ function setPlayerHTML() {
 }
 
 function setSourceHTML() {
-    return '<a href="javascript:" class="add-source d-flex w-100 h-100 text-white" ' +
+    return '<a href="javascript:" class="add-source d-flex w-100 h-100 text-white text-center" ' +
         'data-bs-toggle="modal" data-bs-target="#monitor-select-modal">' +
         '<div class="m-auto">' +
         '<h3 class="ti-plus"></h3>' +
@@ -350,7 +350,8 @@ reviewContainer.on("click", ".player-btn.change", function () {
 
 reviewContainer.on("click", ".player-btn.remove", function () {
     // 移除预览
-    $(this).parent().parent().parent().parent().html(setSourceHTML())
+    let index = $(this).parent().parent().parent().index()
+    reviewContainer.children().eq(index).html(setSourceHTML())
 })
 
 reviewContainer.on("mouseover", ".source-img, .player-bar", function () {
@@ -465,7 +466,7 @@ monitorListArea.on("click", ".monitor-data", function () {
 })
 
 $("redirect-monitor-insert-btn").click(function () {
-    window.open(monitorManageURL + "#insert-monitor")
+    window.open(monitorCreateURL)
 })
 
 pageNumTipArea.on("keyup", "input[name=num]", function () {

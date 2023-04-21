@@ -232,7 +232,7 @@
     <script>
         let monitorReviewURl = '{% url 'monitor:source-review' 0 %}'
         let monitorQueryURL = "{% url 'monitor:query' %}"
-        let monitorManageURL = "{% url 'monitor:manage' %}"
+        let monitorCreateURL = "{% url 'monitor:create' %}"
         let reviewMonitor = [
             {% for monitor in reviewMonitor %}
                 {% if monitor %}
