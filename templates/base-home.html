@@ -29,8 +29,8 @@
                                     <i class="ti-layout-media-right-alt"></i><span>监控管理</span>
                                 </a>
                             </li>
-                            <li class="{% block monitor-stream %}{% endblock %}">
-                                <a href="javascript:void(0)">
+                            <li class="{% block multiview %}{% endblock %}">
+                                <a href="{% url 'monitor:multiview' %}">
                                     <i class="ti-layout-grid2"></i><span>实时监控</span>
                                 </a>
                             </li>
@@ -41,10 +41,9 @@
                             </li>
                             <li class="{% block detect-statistics %}{% endblock %}">
                                 <a href="javascript:void(0)">
-                                    <i class="ti-pie-chart"></i><span>识别统计</span>
+                                    <i class="fa fa-table"></i><span>识别统计</span>
                                 </a>
                             </li>
-
                         </ul>
                     </nav>
                 </div>
@@ -52,51 +51,50 @@
         </div>
         <!-- sidebar menu area end -->
         <!-- main content area start -->
-        <div class="main-content">
+        <div class="page-content d-flex flex-column min-vh-100">
             <!-- header area start -->
-            <div class="header-area">
+            <div class="header-area collapse show" id="header-collapse">
                 <div class="row align-items-center">
-                    <div class="col-sm-6">
-                        <div class="breadcrumbs-area clearfix">
-                            <div class="nav-btn pull-left">
+                    <div class="col-sm-7">
+                        <div class="breadcrumbs-area d-flex">
+                            <div class="nav-btn mt-auto mb-auto">
                                 <span></span>
                                 <span></span>
                                 <span></span>
                             </div>
-                            <h4 class="page-title pull-left">
+                            <h4 class="page-title">
                                 {% block page-title %}Dashboard{% endblock %}
                             </h4>
                             {% block breadcrumbs %}
-                                <ul class="breadcrumbs pull-left">
+                                <ul class="breadcrumbs">
                                     <li><a href="#">Home</a></li>
                                     <li><span>button</span></li>
                                 </ul>
                             {% endblock %}
                         </div>
                     </div>
-                    <div class="col-sm-6 clearfix">
+                    <div class="col-sm-5 clearfix">
                         <ul class="notification-area pull-right">
                             <li id="full-view"><i class="ti-fullscreen"></i></li>
+                            <li class="helps-btn"><i class="ti-agenda"></i></li>
                             <li id="full-view-exit"><i class="ti-zoom-out"></i></li>
                             <li class="dropdown">
                                 <i class="ti-bell dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"></i>
                                 <div class="dropdown-menu bell-notify-box notify-box">
+                                    <!-- TODO: 完善消息框 -->
                                     <span class="notify-title"></span>
                                     <div class="notify-list"></div>
                                 </div>
                             </li>
-                            <li class="settings-btn">
-                                <i class="ti-settings"></i>
-                            </li>
+                            <li class="settings-btn"><i class="ti-settings"></i></li>
                         </ul>
                     </div>
                 </div>
             </div>
             <!-- header area end -->
-            <div class="main-content-inner">
-                {% block main-content %}{% endblock %}
-            </div>
+            {% block main-content %}{% endblock %}
         </div>
+        <!-- main content area end -->
         <!-- warning toast area start -->
         <div class="toast-container show position-fixed bottom-0 end-0 p-3" data-bs-autohide="false"></div>
         <!-- warning toast area end -->
@@ -104,6 +102,13 @@
         <div class="alert-dismiss position-fixed top-0 mt-2 start-0 end-0 d-flex"></div>
         <!-- alert area end -->
     </div>
+    <!-- offset area start -->
+    <div class="offset-area">
+        <div class="offset-close"><i class="ti-close"></i></div>
+        <div class="offset-content">
+        </div>
+    </div>
+    <!-- offset area end -->
 {% endblock %}
 
 {% block script %}

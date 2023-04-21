@@ -7,6 +7,7 @@ app_name = "monitor"
 _view_urlpatterns = [
     path("manage/", views.manage, name="manage"),
     path("<int:monitor_id>/info/", views.info, name="info"),
+    path("multiview/", views.multiview, name="multiview"),
 ]
 
 urlpatterns = [

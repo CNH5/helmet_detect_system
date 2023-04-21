@@ -66,7 +66,7 @@ function getWarningList() {
 
 function customAlert(type, title, info, timeout) {
     let alt = $(
-        '<div class="alert alert-' + type + ' alert-dismissible fadeOut show d-inline-flex ms-auto me-auto" role="alert">' +
+        '<div class="alert alert-' + type + ' alert-dismissible show d-inline-flex ms-auto me-auto" role="alert">' +
         '<div class="alert-text-wrap">' +
         '<strong class="alert-title">' + title + '</strong>' +
         '<span class="alert-text ms-1">' + info + '</span>' +
@@ -118,7 +118,7 @@ $(() => {
                 timeNode.html(Math.floor(t / 3600000) + "小时前")
             }
         })
-    }, 10000)
+    }, 20000)
 
     getWarningNum()
 })

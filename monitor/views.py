@@ -22,3 +22,17 @@ def info(request, monitor_id: int):
     监控信息界面
     """
     return render(request, "monitor/info.html", {"monitor": MonitorInfo.objects.get(pk=monitor_id)})
+
+
+def multiview(request):
+    if id_list := request.COOKIES.get("multiviewMonitors"):
+        id_list = id_list.split("%")
+    else:
+        id_list = [0] * 9
+    monitors = []
+    for i in id_list:
+        m = MonitorInfo.objects.filter(id=i)
+        monitors.append(m[0].to_json() if m.count() > 0 else '')
+    return render(request, "monitor/multiview.html", {
+        "reviewMonitor": monitors
+    })

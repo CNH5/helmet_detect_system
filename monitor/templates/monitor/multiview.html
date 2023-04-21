@@ -1,2 +1,251 @@
 {% extends "base-home.html" %}
 
+{% block title %}
+    <title>监控实时预览</title>
+{% endblock %}
+
+{% block style %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "monitor/multiview/multiview.css" %}">
+{% endblock %}
+
+{% block multiview %}
+    active
+{% endblock %}
+
+{% block page-title %}
+    监控实时预览
+{% endblock %}
+
+{% block breadcrumbs %}
+    <span class="ti-layout border-start ps-3 pt-2"></span>
+    <div class="ps-3 pt-1">行数：</div>
+    <label class="mb-0 col-sm-1">
+        <input type="text" class="form-control form-control-sm" name="row" disabled>
+    </label>
+    <div class="ms-2 pt-1">列数：</div>
+    <label class="mb-0 col-sm-1">
+        <input type="text" class="form-control form-control-sm" name="col" disabled>
+    </label>
+    <button type="button" class="btn btn-xs btn-outline-primary ms-3 edit-btn">
+        <i class="fa fa-edit"></i> 修改
+    </button>
+    <button type="button" class="btn btn-xs btn-primary ms-3 edit-save-btn d-none">
+        <span class="ti-save"></span> 保存
+    </button>
+    <button type="button" class="btn btn-xs btn-secondary ms-2 edit-cancel-btn d-none">
+        <span class="ti-close"></span> 取消
+    </button>
+{% endblock %}
+
+{% block main-content %}
+    <div class="main-content-inner p-1 flex-grow-1 d-flex">
+        <div class="review-grid d-grid bg-black flex-grow-1 mh-100">
+            {% for monitor in reviewMonitor %}
+                <div class="border border-white">
+                    {% if monitor %}
+                        <div class="source-player w-100 h-100 align-middle d-flex">
+                            <img class="source-img m-auto" src="{% url 'monitor:source-review' monitor.id %}" alt="#">
+                            <div class="player-bar info">
+                                <div class="source-name ms-3 my-auto">
+                                    <i class="fa fa-video-camera"></i>
+                                    <span>{{ monitor.name }}</span>
+                                </div>
+                                <div class="ms-auto my-auto me-3">
+                                    <a href="javascript:" class="player-btn info text-white" title="详情">
+                                        <i class="fa fa-info-circle"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="player-bar control">
+                                <div class="ms-3 my-auto">
+                                    <a href="javascript:" class="player-btn refresh text-white" title="刷新">
+                                        <i class="fa fa-refresh"></i>
+                                    </a>
+                                    <a href="javascript:" class="player-btn change text-white ms-3" title="切换"
+                                       data-bs-toggle="modal" data-bs-target="#monitor-select-modal">
+                                        <i class="fa fa-exchange"></i>
+                                    </a>
+                                    <a href="javascript:" class="player-btn remove text-white ms-3" title="移除预览">
+                                        <i class="fa fa-minus-circle"></i>
+                                    </a>
+                                </div>
+                                <div class="ms-auto my-auto me-3">
+                                    <a href="javascript:" class="player-btn alt text-white" title="全屏">
+                                        <i class="fa fa-arrows-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="javascript:" class="add-source d-flex w-100 h-100 text-white text-center"
+                           data-bs-toggle="modal" data-bs-target="#monitor-select-modal">
+                            <div class="m-auto">
+                                <h3 class="ti-plus"></h3>
+                                <h5>添加监控</h5>
+                            </div>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- modal offcanvas area start -->
+    <!-- monitor select modal start -->
+    <div id="monitor-select-modal" class="modal modal-xl fade" data-bs-backdrop="static" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">监控选择</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- monitor filter area start -->
+                    <div class="d-flex row my-1">
+                        <span class="col-2 my-auto text-end filter-name">监控名:</span>
+                        <label class="col-3 my-auto">
+                            <input type="text" class="form-control form-control-sm" name="monitor-name">
+                        </label>
+                        <span class="col-2 ms-auto my-auto text-end filter-name">监控ID:</span>
+                        <label class="col-3 my-auto">
+                            <input type="text" class="form-control form-control-sm" name="id-range-start">
+                        </label>
+                        <span class="col-md-auto my-auto px-2">~</span>
+                        <label class="col-3 my-auto">
+                            <input type="text" class="form-control form-control-sm" name="id-range-end">
+                        </label>
+                    </div>
+                    <div class="d-flex row my-1">
+                        <span class="col-2 my-auto text-end filter-name">监控源:</span>
+                        <label class="col-3 my-auto">
+                            <input type="text" class="form-control form-control-sm" name="monitor-source">
+                        </label>
+                        <span class="col-2 ms-auto my-auto text-end filter-name">创建时间:</span>
+                        <label class="col-3 my-auto">
+                            <input type="datetime-local" class="form-control form-control-sm" name="create-date-start">
+                        </label>
+                        <span class="col-md-auto px-2">~</span>
+                        <label class="col-3 my-auto">
+                            <input type="datetime-local" class="form-control form-control-sm" name="create-date-end">
+                        </label>
+                    </div>
+                    <!-- monitor filter area end -->
+                    <div class="w-100 my-4" style="height: 1px;background-color: #dee2e6"></div>
+                    <!-- monitor table area start -->
+                    <div class="d-flex my-1">
+                        <h6 class="fw-bold">监控设备列表</h6>
+                        <div class="ms-auto d-inline-flex">
+                            <div class="my-auto">
+                                <button type="button" id="table-refresh-btn" class="btn btn-primary btn-xs refresh-btn">
+                                    <span class="ti-reload mt-1"></span>
+                                </button>
+                            </div>
+                            <label class="my-auto mx-2 h-100">
+                                <select name="order-select" class="form-select form-select-sm h-100">
+                                    <option value="true" selected>倒序</option>
+                                    <option value="false">正序</option>
+                                </select>
+                            </label>
+                            <div class="my-auto">
+                                <button type="button" id="clean-filter-btn" class="d-flex btn btn-xs btn-secondary">
+                                    <span class="me-1 my-auto">重置筛选</span>
+                                    <span class="ti-trash my-auto"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table text-center ">
+                        <thead class="text-white" style="background-color: #17a2b8;">
+                        <tr>
+                            <th style="width: 10%" scope="col">ID</th>
+                            <th style="width: 25%" scope="col">监控名</th>
+                            <th style="width: 20%" scope="col">创建日期</th>
+                            <th style="width: 30%" scope="col">监控源</th>
+                            <th style="width: 15%" scope="col">安全帽检测</th>
+                        </tr>
+                        </thead>
+                        <tbody class="monitor-list-area"></tbody>
+                    </table>
+                    <!-- table data none tips area start -->
+                    <div class="data-none-tips d-flex justify-content-center align-items-center visually-hidden">
+                        <div class="me-4">
+                            <p class="fs-5 text-center mb-2">暂无数据</p>
+                            <p class="fs-5 text-center">
+                                请先<a href="javascript:" class="redirect-monitor-insert-btn">添加监控</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="filter-none-tips d-flex justify-content-center align-items-center visually-hidden">
+                        <div class="me-4">
+                            <p class="fs-5 text-center mb-2">筛选结果为空!</p>
+                            <p class="fs-5 text-center">请重新检查筛选条件</p>
+                        </div>
+                    </div>
+                    <!-- table data none tips area end -->
+                    <!-- pagination area start -->
+                    <div class="pagination-area d-flex position-relative align-items-center visually-hidden">
+                        <div class="my-auto pull-left">
+                            每页
+                            <label class="mx-1 mb-0">
+                                <input class="pagination-input form-control form-control-sm"
+                                       type="text" name="page-size" value="10">
+                            </label>
+                            条数据
+                        </div>
+                        <div class="multi-page d-flex mx-auto">
+                            <div class="my-auto me-1">
+                                <a href="javascript:" class="page-previous btn btn-xs btn-outline-primary border">
+                                    上一页
+                                </a>
+                            </div>
+                            <div class="my-auto d-flex page-num-area"></div>
+                            <div class="my-auto me-auto ms-1">
+                                <a href="javascript:" class="page-next btn btn-xs btn-outline-primary border">
+                                    下一页
+                                </a>
+                            </div>
+                        </div>
+                        <div class="my-auto pull-right page-num-tip-area"></div>
+                    </div>
+                    <!-- pagination area end -->
+                    <!-- monitor table area end -->
+                </div>
+                <div class="modal-footer">
+                    <div class="me-auto">
+                        <span class="text-secondary">当前选择：</span>
+                        <mark class="selected-monitor-info">无</mark>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" id="confirm-monitor-btn" class="btn btn-primary btn-sm" disabled>
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- monitor select modal end -->
+    <!-- modal area end -->
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+    <script>
+        let monitorReviewURl = '{% url 'monitor:source-review' 0 %}'
+        let monitorQueryURL = "{% url 'monitor:query' %}"
+        let monitorManageURL = "{% url 'monitor:manage' %}"
+        let reviewMonitor = [
+            {% for monitor in reviewMonitor %}
+                {% if monitor %}
+                    {
+                        'id': '{{ monitor.id }}',
+                        'name': '{{ monitor.name }}',
+                        'source': '{{ monitor.source }}',
+                    },
+                {% else %}
+                    null,
+                {% endif %}
+            {% endfor %}
+        ]
+    </script>
+    <script src="{% static 'monitor/multiview/multiview.js' %}"></script>
+{% endblock %}

@@ -10,11 +10,15 @@ let addFilterBtn = $("#btn-add-filter")
 let orderChangeBtn = $("#order-change")
 let filterBadge = $("span.badge")
 
+let currentPage = 1
+let pageNums = 0
+let monitorList = []
+
 class TableData {
     constructor() {
         this.pageNums = 1
         this.monitorList = [{
-            pk: 0,
+            id: 0,
             name: "",
             create_date: "",
             helmet_detect: true,
@@ -35,14 +39,14 @@ class TableData {
     }
 
     getMonitorId(index) {
-        return this.monitorList[index].pk
+        return this.monitorList[index].id
     }
 
     check(index) {
         if (this.checkedMonitors.length === 0) {
             optionButton.removeClass("disabled")
         }
-        this.checkedMonitors.push(this.monitorList[index].pk)
+        this.checkedMonitors.push(this.monitorList[index].id)
         if (this.monitorList.length === this.checkedMonitors.length) {
             // 设置全选状态
             allCheckBox.prop("checked", true)
@@ -54,7 +58,7 @@ class TableData {
             // 取消全选状态
             allCheckBox.prop("checked", false)
         }
-        this.checkedMonitors.splice(this.checkedMonitors.indexOf(this.monitorList[index].pk), 1)
+        this.checkedMonitors.splice(this.checkedMonitors.indexOf(this.monitorList[index].id), 1)
 
         if (this.checkedMonitors.length === 0) {
             optionButton.addClass("disabled")
@@ -76,7 +80,7 @@ class TableData {
         let that = this
         monitorsList.find("input[name=chk]").each(function (i, item) {
             if (!item.checked) {
-                that.checkedMonitors.push(that.monitorList[i].pk)
+                that.checkedMonitors.push(that.monitorList[i].id)
                 item.checked = true
             }
         })
@@ -89,8 +93,7 @@ class QueryParams {
         this.queryURL = queryURL
         this.currentPage = 1
         this.pageSize = 10
-        this.queryName = ""
-        this.orderKey = "pk"
+        this.orderKey = "id"
         this.orderPref = "-"
         this.filter = []
     }
@@ -134,7 +137,6 @@ function refreshTable() {
             currentPage: queryParams.currentPage,
             pageSize: queryParams.pageSize,
             order: queryParams.orderPref + queryParams.orderKey,
-            info: queryParams.queryName,
             filter: JSON.stringify(queryParams.filter.filter(f => {
                 return f["value"] !== ""
             })),
@@ -159,7 +161,7 @@ function drawTable() {
             "<tr>" +
             "<th class='custom-control custom-checkbox' scope='row'>" +
             "<label class='monitor-checkbox'>" +
-            "<input type='checkbox' name='chk'> " + "<span>" + data[i].pk + "</span>" +
+            "<input type='checkbox' name='chk'> " + "<span>" + data[i].id + "</span>" +
             "</label>" +
             "</th>" +
             "<td class='clickable table-row-clickable'>" + data[i].name + "</td>" +
@@ -277,7 +279,7 @@ function changeDetect(pkList, detect) {
                 console.log(data)
             } else if (data["code"] === 200) {
                 monitorsList.find("input[name=det]").each(function (i, item) {
-                    if (tableData.checkedMonitors.indexOf(tableData.monitorList[i].pk) >= 0 &&
+                    if (tableData.checkedMonitors.indexOf(tableData.monitorList[i].id) >= 0 &&
                         item.checked !== detect) {
                         item.checked = detect
                     }
@@ -297,7 +299,7 @@ function filterHTML(selectHTML) {
 
         "<div class='col-2'>" +
         "<select class='col-select form-select form-select-sm'>" +
-        "<option value='pk' selected>ID</option>" +
+        "<option value='id' selected>ID</option>" +
         "<option value='name'>监控名</option>" +
         "<option value='create_date'>创建日期</option>" +
         "<option value='source'>监控源</option>" +
@@ -462,7 +464,7 @@ addFilterBtn.click(function () {
     }
     queryParams.filter.push({
         operator: "and",
-        col: "pk",
+        col: "id",
         filter: "=",
         value: "",
     })
@@ -572,7 +574,7 @@ filterList.on("change", ".col-select", function () {
         )
         filterNode.prop("disabled", false)
         valueNode.prop("type", "text")
-    } else if (val === "pk") {
+    } else if (val === "id") {
         queryParams.filter[i].filter = "="
         filterNode.html(
             "<option value='=' selected>=</option>" +

@@ -26,6 +26,21 @@ td {
     aspect-ratio: 10/2;
 }
 
-#page-num-input{
+#page-num-input {
     width: 60px;
+}
+
+.option-bar {
+    height: 40px;
+    visibility: hidden;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    transform: translateY(100%);
+    transition-property: visibility, transform;
+    transition-duration: 0.4s;
+}
+
+.source-img:hover ~ .option-bar, .option-bar:hover {
+    transform: translateY(0);
+    visibility: visible;
 }

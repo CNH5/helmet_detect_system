@@ -11,7 +11,7 @@ class Info(models.Model):
 
     def to_json(self):
         return {
-            "pk": self.pk,
+            "id": self.id,
             "create_date": self.create_date.strftime("%Y年%m月%d日 %H:%M:%S"),
             "name": self.name,
             "source": self.source,

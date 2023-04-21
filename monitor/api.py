@@ -108,41 +108,25 @@ def update_detect(request):
     return JsonResponse({"code": 200, "msg": f"修改了 {n} 条数据"})
 
 
-def load_filter(query_filter: list[dict]) -> Q:
-    q = Q(pk__gt=0)
-    for f in query_filter:
-        op = f.get("operator", None)
-        col = f.get("col", None)
-        fp = f.get("filter", None)
-        val = f.get("value", None)
-        if op and col and fp and val:
-            operator = (lambda x, y: x & y) if op == "and" else (lambda x, y: x | y)
-            if col == "name" or col == "source":
-                if fp == "not_contain":
-                    q = operator(q, ~Q(**{col + "__contains": val}))
-                elif fp == "pattern":
-                    q = operator(q, Q(**{col + "__regex": val}))
-                elif fp == "equal":
-                    q = operator(q, Q(**{col + "__exact": val}))
-                elif fp == "not_equal":
-                    q = operator(q, ~Q(**{col + "__exact": val}))
-                else:
-                    q = operator(q, Q(**{col + "__contains": val}))
-            if col == "create_date" or col == "pk":
-                if fp == "≠":
-                    q = operator(q, ~Q(**{col + "__exact": val}))
-                elif fp == ">":
-                    q = operator(q, Q(**{col + "__gt": val}))
-                elif fp == "<":
-                    q = operator(q, Q(**{col + "__lt": val}))
-                elif fp == "≥":
-                    q = operator(q, Q(**{col + "__gte": val}))
-                elif fp == "≤":
-                    q = operator(q, Q(**{col + "__lte": val}))
-                else:
-                    q = operator(q, Q(**{col + "__exact": val}))
-            elif col == "detect":
-                q = operator(q, Q(helmet_detect=val))
+def load_filter(request) -> Q:
+    q = None
+    for f in json.loads(request.GET.get("filter", "[]")):
+        if f.get("operator") and f.get("col") and f.get("operation") and f.get("value"):
+            if f["col"] in ["name", "source"]:
+                if f["col"] not in ["contains", "regex", "exact"]:
+                    f["operation"] = "contains"
+            elif f["col"] in ["create_date", "pk", "id"]:
+                if f.get("operation") not in ["exact", "gt", "lt", "gte", "lte"]:
+                    f["operation"] = "exact"
+            elif f["col"] == "detect":
+                f["operation"] = ""
+            else:
+                continue
+            key = (f["col"] + "__" + f["operation"]) if f["operation"] != "" else f["col"]
+            qi = Q(**{key: f["value"]})
+            if f.get("not"):
+                qi = ~qi
+            q = (q & qi if f["operator"] == "and" else q | qi) if q else qi
     return q
 
 
@@ -152,11 +136,16 @@ def query(request):
     查询监控设备
     """
     current_page = request.GET.get("currentPage", 1)
-    order = request.GET.get("order", "-pk")
-    query_filter = json.loads(request.GET.get("filter", "[]"))
-    query_filter = load_filter(query_filter)
+    order = request.GET.get("orderCol", "create_date")
+    if request.GET.get("ascendingOrder") in ["True", "true", 1, "1", True]:
+        order = "-" + order
+    query_filter = load_filter(request)
+    if query_filter:
+        monitor_list = MonitorInfo.objects.filter(query_filter).order_by(order)
+    else:
+        monitor_list = MonitorInfo.objects.order_by(order)
 
-    monitor_list = MonitorInfo.objects.filter(query_filter).order_by(order)
+    # 分页
     paginator = Paginator(monitor_list, request.GET.get("pageSize", 10))
     try:
         monitor_list = paginator.page(current_page)
@@ -176,7 +165,7 @@ def query(request):
 
 
 @require_GET
-def test_source(request, monitor_id):
+def test_source(_, monitor_id):
     monitor = MonitorInfo.objects.get(pk=monitor_id)
     source = int(monitor.source) if INTEGER_PATTERN.match(monitor.source) else monitor.source
     return JsonResponse({"connected": cv2.VideoCapture(source, cv2.CAP_DSHOW).isOpened()})
@@ -229,9 +218,13 @@ def review_source(_, monitor_id):
         while True:
             if (frame := detect_pool.get_detected_frame(monitor_id)) is None:
                 if cap is None:
-                    m = MonitorInfo.objects.get(id=monitor_id)
-                    source = int(m.source) if INTEGER_PATTERN.match(m.source) else m.source
-                    cap = cv2.VideoCapture(source)
+                    m = MonitorInfo.objects.filter(id=monitor_id)
+                    if m.count() > 0:
+                        m = m[0]
+                        source = int(m.source) if INTEGER_PATTERN.match(m.source) else m.source
+                        cap = cv2.VideoCapture(source)
+                    else:
+                        return redirect("/static/img/404.jpeg")
                 ret, frame = cap.read()
                 if not ret:
                     break

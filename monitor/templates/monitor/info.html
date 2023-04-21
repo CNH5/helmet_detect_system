@@ -1,9 +1,13 @@
 {% extends "monitor/base.html" %}
 
+{% block title %}
+    <title>监控信息</title>
+{% endblock %}
+
 {% block style %}
     {{ block.super }}
-    <link href="{% static "assets/css/jquery.fancybox.min.css" %}" rel="stylesheet">
-    <link href="{% static "monitor/info/info.css" %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static "assets/css/jquery.fancybox.min.css" %}">
+    <link rel="stylesheet" href="{% static "monitor/info/info.css" %}">
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -14,122 +18,136 @@
 {% endblock %}
 
 {% block main-content %}
-    <!-- monitor area start -->
-    <div class="card mt-4">
-        <div class="card-body row">
-            <div class="col-9 ">
-                <div class="source-video text-center border bg-black">
-                    <img class="" src="{% url 'monitor:source-review' monitor.id %}" alt="#">
+    <div class="main-content-inner py-3">
+        <!-- monitor area start -->
+        <div class="card">
+            <div class="card-body row">
+                <div class="col-9">
+                    <div class="source-video text-center border bg-black position-relative overflow-hidden">
+                        <img class="source-img" src="{% url 'monitor:source-review' monitor.id %}" alt="#">
+                        <div class="option-bar position-absolute bottom-0 start-0 d-flex w-100">
+                            <div class="ms-3 my-auto">
+                                <a href="javascript:" class="player-btn refresh text-white" title="刷新">
+                                    <i class="fa fa-refresh"></i>
+                                </a>
+                            </div>
+                            <div class="ms-auto my-auto me-3">
+                                <a href="javascript:" class="player-btn alt text-white" title="全屏">
+                                    <i class="fa fa-arrows-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- monitor info area start -->
+                <div class="col-3">
+                    <div class="form-title mb-3 rounded-1 d-inline-flex w-100">
+                        <div class="ms-2 fs-6 mt-2 mb-2">监控信息</div>
+                        <div class="operation-area me-2 ms-auto mt-auto mb-auto d-inline-flex">
+                            <a href="javascript:" class="btn-edit-info text-white" title="编辑监控信息">编辑</a>
+                        </div>
+                    </div>
+                    <form class="update-form">
+                        <div class="mb-3">
+                            <label for="monitor-name-input" class="form-label ms-2 fs-6">监控名</label>
+                            <input type="text" maxlength="20" class="form-control" id="monitor-name-input"
+                                   placeholder="监控名" value="{{ monitor.name }}" name="name" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="monitor-source-input" class="form-label ms-2">监控源</label>
+                            <textarea class="form-control" id="monitor-source-input"
+                                      name="source" disabled>{{ monitor.source }}</textarea>
+                        </div>
+                        <div class="form-check form-switch">
+                            <label class="form-check-label">
+                                安全帽检测
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       name="detect" {% if monitor.helmet_detect %}checked{% endif %}>
+                            </label>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <!-- monitor info area start -->
-            <div class="col-3">
-                <div class="form-title mb-3 rounded-1 d-inline-flex w-100">
-                    <div class="ms-2 fs-6 mt-2 mb-2">监控信息</div>
-                    <div class="operation-area me-2 ms-auto mt-auto mb-auto d-inline-flex">
-                        <a href="javascript:" class="btn-edit-info text-white" title="编辑监控信息">编辑</a>
+            <!-- monitor info area end -->
+        </div>
+        <!-- monitor area end -->
+        <!-- detect result table start -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <!-- table header start -->
+                <h4 class="header-title ms-2">检测结果列表</h4>
+                <div class="d-flex">
+                    <!-- table filter area start -->
+                    <div>
+                        <div class="input-group">
+                            <label for="detect-type-select" class="me-2 mb-0 mt-1"></label>
+                            <select id="detect-type-select" class="form-select form-select-sm rounded-start">
+                                <option value="" selected>全部</option>
+                                <option value="head_without_helmet">未戴安全帽</option>
+                                <option value="head_with_helmet">佩戴安全帽</option>
+                                <option value="person">人</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <form class="update-form">
-                    <div class="mb-3">
-                        <label for="monitor-name-input" class="form-label ms-2 fs-6">监控名</label>
-                        <input type="text" maxlength="20" class="form-control" id="monitor-name-input"
-                               placeholder="监控名" value="{{ monitor.name }}" name="name" disabled>
+                    <div class="ms-2">
+                        <div class="input-group input-group-sm">
+                            <label for="start-time" class="mb-0 mt-1 me-2">开始时间:</label>
+                            <input id="start-time" type="datetime-local" class="form-control">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="monitor-source-input" class="form-label ms-2">监控源</label>
-                        <textarea class="form-control" id="monitor-source-input"
-                                  name="source" disabled>{{ monitor.source }}</textarea>
+                    <div class="ms-2 text-center">
+                        <div class="input-group input-group-sm">
+                            <label for="end-time" class="mb-0 mt-1 me-2">结束时间:</label>
+                            <input id="end-time" type="datetime-local" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-check form-switch">
-                        <label class="form-check-label">
-                            安全帽检测
-                            <input class="form-check-input" type="checkbox" role="switch"
-                                   name="detect" {% if monitor.helmet_detect %}checked{% endif %}>
+                    <div class="ms-2">
+                        <label class="input-group input-group-sm" role="group">
+                            <select id="order-select" class="form-select rounded">
+                                <option value="true" selected>降序</option>
+                                <option value="false">升序</option>
+                            </select>
                         </label>
                     </div>
-                </form>
+                    <!-- table filter area end -->
+                    <!-- table options start -->
+                    <div class="ms-auto d-inline">
+                        <button type="button" class="btn btn-outline-primary btn-xs refresh-btn">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-danger delete-checked-btn"
+                                data-bs-toggle="modal" data-bs-target="#delete-checked-confirm-modal" disabled>
+                            删除选中
+                        </button>
+                    </div>
+                    <!-- table options end -->
+                </div>
+                <!-- table header end -->
+                <!-- table start -->
+                <table class="table mt-2 table-fixed">
+                    <thead class="text-center">
+                    <tr>
+                        <th class="text-start" scope="col">
+                            <label class="mt-2 mb-0"><input type="checkbox" name="all-check-box"></label>
+                            ID
+                        </th>
+                        <th style="width: 20%" scope="col">检测时间</th>
+                        <th style="width: 15%" scope="col">未戴安全帽</th>
+                        <th style="width: 15%" scope="col">佩戴安全帽</th>
+                        <th style="width: 15%" scope="col">人</th>
+                        <th scope="col">图像</th>
+                        <th scope="col">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="result-list"></tbody>
+                </table>
+                <div class="result-tip-area d-flex justify-content-center align-items-center"></div>
+                <!-- table end -->
+                <div class="pagination-area d-flex mt-4"></div>
             </div>
         </div>
-        <!-- monitor info area end -->
+        <!-- detect result table end -->
     </div>
-    <!-- monitor area end -->
-    <!-- detect result table start -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <!-- table header start -->
-            <h4 class="header-title ms-2">检测结果列表</h4>
-            <div class="d-flex">
-                <!-- table filter area start -->
-                <div>
-                    <div class="input-group">
-                        <label for="detect-type-select" class="me-2 mb-0 mt-1"></label>
-                        <select id="detect-type-select" class="form-select form-select-sm rounded-start">
-                            <option value="" selected>全部</option>
-                            <option value="head_without_helmet">未戴安全帽</option>
-                            <option value="head_with_helmet">佩戴安全帽</option>
-                            <option value="person">人</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="ms-2">
-                    <div class="input-group input-group-sm">
-                        <label for="start-time" class="mb-0 mt-1 me-2">开始时间:</label>
-                        <input id="start-time" type="datetime-local" class="form-control">
-                    </div>
-                </div>
-                <div class="ms-2 text-center">
-                    <div class="input-group input-group-sm">
-                        <label for="end-time" class="mb-0 mt-1 me-2">结束时间:</label>
-                        <input id="end-time" type="datetime-local" class="form-control">
-                    </div>
-                </div>
-                <div class="ms-2">
-                    <label class="input-group input-group-sm" role="group">
-                        <select id="order-select" class="form-select rounded">
-                            <option value="true" selected>降序</option>
-                            <option value="false">升序</option>
-                        </select>
-                    </label>
-                </div>
-                <!-- table filter area end -->
-                <!-- table options start -->
-                <div class="ms-auto d-inline">
-                    <button type="button" class="btn btn-outline-primary btn-xs refresh-btn">
-                        <i class="fa fa-refresh"></i>
-                    </button>
-                    <button type="button" class="btn btn-xs btn-danger delete-checked-btn"
-                            data-bs-toggle="modal" data-bs-target="#delete-checked-confirm-modal" disabled>
-                        删除选中
-                    </button>
-                </div>
-                <!-- table options end -->
-            </div>
-            <!-- table header end -->
-            <!-- table start -->
-            <table class="table mt-2 table-fixed">
-                <thead>
-                <tr>
-                    <th scope="col">
-                        <label class="mt-2 mb-0"><input type="checkbox" name="all-check-box"></label>
-                        ID
-                    </th>
-                    <th style="width: 20%" class="text-center" scope="col">检测时间</th>
-                    <th style="width: 15%" class="text-center" scope="col">未戴安全帽</th>
-                    <th style="width: 15%" class="text-center" scope="col">佩戴安全帽</th>
-                    <th style="width: 15%" class="text-center" scope="col">人</th>
-                    <th class="text-center" scope="col">图像</th>
-                    <th class="text-center" scope="col">操作</th>
-                </tr>
-                </thead>
-                <tbody id="result-list"></tbody>
-            </table>
-            <div class="result-tip-area d-flex justify-content-center align-items-center"></div>
-            <!-- table end -->
-            <div class="pagination-area d-flex mt-4"></div>
-        </div>
-    </div>
-    <!-- detect result table end -->
     <!-- delete confirm modal start -->
     <div id="delete-checked-confirm-modal" class="modal fade" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
