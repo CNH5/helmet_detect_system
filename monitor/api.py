@@ -114,10 +114,10 @@ def load_filter(request) -> Q:
     for f in json.loads(request.GET.get("filter", "[]")):
         if f.get("col") and f.get("operation") and f.get("value"):
             if f["col"] in ["name", "source"]:
-                if f["col"] not in ["contains", "regex", "exact"]:
+                if f["operation"] not in ["contains", "regex", "exact"]:
                     f["operation"] = "contains"
             elif f["col"] in ["create_date", "pk", "id"]:
-                if f.get("operation") not in ["exact", "gt", "lt", "gte", "lte", "exact", ""]:
+                if f["operation"] not in ["exact", "gt", "lt", "gte", "lte", ""]:
                     f["operation"] = "exact"
             elif f["col"] == "detect":
                 f["operation"] = ""

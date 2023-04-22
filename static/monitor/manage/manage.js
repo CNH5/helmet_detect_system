@@ -14,11 +14,12 @@ let pageNumTipArea = $(".page-num-tip-area")
 let currentPage = 1
 let orderCol = "id"
 let ascendingOrder = true
-let useFilter = false
+
 // other
 let pageNums = 0
 let monitorListData = []
 let deleteMonitors = []
+
 
 function getCheckedMonitorID() {
     let result = []
@@ -32,8 +33,6 @@ function getCheckedMonitorID() {
 
 // 重新获取表格数据
 function refreshTable(successCallback, errorCallback) {
-    let f = useFilter ? getFilterData() : []
-    console.log(f)
     $.ajax({
         method: "GET",
         url: monitorQueryURL,
@@ -43,7 +42,7 @@ function refreshTable(successCallback, errorCallback) {
             pageSize: pageSizeInput.val(),
             orderCol: orderCol,
             ascendingOrder: ascendingOrder,
-            filter: JSON.stringify(f),
+            filter: JSON.stringify(getFilterData()),
         },
         success: function (data) {
             currentPage = data["currentPage"]
@@ -193,12 +192,53 @@ function getFilterData() {
     filterList.find(".filter-item").each(function () {
         let val = $(this).find("input[name=value]").val()
         if (val !== "") {
-            filters.push({
-                operator: $(this).find("select[name=operator]").val(),
-                col: $(this).find("select[name=col]").val(),
-                operation: $(this).find("select[name=operation]").val(),
-                value: val,
-            })
+            let filter = {
+                "operator": $(this).find("select[name=operator]").val(),
+                "col": $(this).find("select[name=col]").val(),
+                "value": val,
+            }
+            switch ($(this).find("select[name=operation]").val()) {
+                case "=":
+                    filter["operation"] = "exact"
+                    filter["not"] = false
+                    break
+                case "≠":
+                    filter["operation"] = "exact"
+                    filter["not"] = true
+                    break
+                case ">":
+                    filter["operation"] = "gt"
+                    filter["not"] = false
+                    break
+                case "<":
+                    filter["operation"] = "lt"
+                    filter["not"] = false
+                    break
+                case "≥":
+                    filter["operation"] = "gte"
+                    filter["not"] = false
+                    break
+                case "≤":
+                    filter["operation"] = "lte"
+                    filter["not"] = false
+                    break
+                case "contain":
+                    filter["operation"] = "contain"
+                    filter["not"] = false
+                    break
+                case "not_contain":
+                    filter["operation"] = "contain"
+                    filter["not"] = true
+                    break
+                case "pattern":
+                    filter["operation"] = "regex"
+                    filter["not"] = false
+                    break
+                default:
+                    filter["operation"] = ""
+                    filter["not"] = false
+            }
+            filters.push(filter)
         }
     })
     return filters
@@ -353,6 +393,7 @@ $(".btn.filter-add").click(function () {
         '</select>' +
         '</label>'
     )
+
     let colSelect = $(
         '<label class="col-3 p-1 mb-0">' +
         '<select class="form-select form-select-sm" name="col">' +
@@ -370,7 +411,7 @@ $(".btn.filter-add").click(function () {
         '</label>' +
         '<label class="col-2 p-1 mb-0">' +
         '<select class="form-select form-select-sm fs-14" name="operation">' +
-        '<option value="=" selected>=</option>' +
+        '<option value="" selected>=</option>' +
         '<option value="≠">≠</option>' +
         '<option value=">">></option>' +
         '<option value="<"><</option>' +
@@ -407,8 +448,8 @@ filterList.on("change", "select[name=col]", function () {
                 "<option value='contain' selected>包含</option>" +
                 "<option value='not_contain'>不包含</option>" +
                 "<option value='pattern'>正则</option>" +
-                "<option value='equal'>等于</option>" +
-                "<option value='not_equal'>不等于</option>"
+                "<option value='='>等于</option>" +
+                "<option value='≠'>不等于</option>"
             )
         }
         operationNode.prop("disabled", false)
@@ -416,7 +457,7 @@ filterList.on("change", "select[name=col]", function () {
     } else if (val === "id" || val === "create_date") {
         if (pre !== "id" && pre !== "create_date") {
             operationNode.html(
-                "<option value='=' selected>=</option>" +
+                "<option value='' selected>=</option>" +
                 "<option value='≠'>≠</option>" +
                 "<option value='>'>></option>" +
                 "<option value='<'><</option>" +
@@ -427,7 +468,7 @@ filterList.on("change", "select[name=col]", function () {
         operationNode.prop("disabled", false)
         valueNode.prop("type", val === "id" ? "number" : "datetime-local")
     } else if (val === "detect") {
-        operationNode.html("<option value='=' selected>=</option>")
+        operationNode.html("<option value='' selected>=</option>")
         operationNode.prop("disabled", true)
     }
     $(this).data('pre', val);
@@ -454,26 +495,9 @@ $(".btn.clean-filters").click(function () {
     })
 })
 
-$(".btn.dnt-use-filter").click(function () {
-    if (useFilter) {
-        useFilter = false
-        filterNumsBadge.addClass("d-none")
-        refreshTable()
-    }
-})
-
-$(".use-filter").click(function () {
-    if (!useFilter) {
-        useFilter = true
-        setFilterNumBadge()
-        refreshTable()
-    }
-})
-
-$("#filter-set-modal").bind("show.bs.modal", function () {
-    if (useFilter) {
-        setFilterNumBadge()
-    }
+$("#filter-set-modal").bind("hide.bs.modal", function () {
+    setFilterNumBadge()
+    refreshTable()
 })
 
 $("#order-change").click(function () {
