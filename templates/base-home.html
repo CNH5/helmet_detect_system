@@ -20,8 +20,8 @@
                     <nav>
                         <ul class="metismenu" id="menu">
                             <li class="{% block overview %}{% endblock %}">
-                                <a href="javascript:void(0)">
-                                    <i class="ti-dashboard"></i><span>总览</span>
+                                <a href="{% url 'overview' %}">
+                                    <i class="ti-dashboard"></i><span>系统总览</span>
                                 </a>
                             </li>
                             <li class="{% block monitor-manage %}{% endblock %}">

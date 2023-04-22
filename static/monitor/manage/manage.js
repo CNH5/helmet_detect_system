@@ -1,179 +1,96 @@
 let monitorsList = $("#monitor-list")
-let pagination = $("#pagination")
 let allCheckBox = $("input[name=all-check-box]")
-let optionButton = $("#option-button")
-let filterList = $("#filter-list")
-let addFilterBtn = $("#btn-add-filter")
-let orderChangeBtn = $("#order-change")
-let filterBadge = $("span.badge")
+let filterList = $(".filter-list")
+let filterNumsBadge = $(".badge.filter-nums")
 
+// pagination
+let pageSizeInput = $("input[name=page-size]")
+let pagePreviousBtn = $(".page-previous")
+let pageNumArea = $(".page-num-area")
+let pageNextBtn = $(".page-next")
+let pageNumTipArea = $(".page-num-tip-area")
+
+// query param
 let currentPage = 1
+let orderCol = "id"
+let ascendingOrder = true
+let useFilter = false
+// other
 let pageNums = 0
-let monitorList = []
+let monitorListData = []
+let deleteMonitors = []
 
-class TableData {
-    constructor() {
-        this.pageNums = 1
-        this.monitorList = [{
-            id: 0,
-            name: "",
-            create_date: "",
-            helmet_detect: true,
-        }]
-        this.checkedMonitors = []
-    }
-
-    changePageNums(pageNums) {
-        this.pageNums = pageNums
-        this.clearChecked()
-        drawPagination()
-    }
-
-    setMonitors(monitorList) {
-        this.monitorList = monitorList
-        this.clearChecked()
-        drawTable()
-    }
-
-    getMonitorId(index) {
-        return this.monitorList[index].id
-    }
-
-    check(index) {
-        if (this.checkedMonitors.length === 0) {
-            optionButton.removeClass("disabled")
+function getCheckedMonitorID() {
+    let result = []
+    monitorsList.find("input[name=chk]").each(function (i, item) {
+        if (item.checked) {
+            result.push(monitorListData[i]["id"])
         }
-        this.checkedMonitors.push(this.monitorList[index].id)
-        if (this.monitorList.length === this.checkedMonitors.length) {
-            // 设置全选状态
-            allCheckBox.prop("checked", true)
-        }
-    }
-
-    uncheck(index) {
-        if (this.monitorList.length === this.checkedMonitors.length) {
-            // 取消全选状态
-            allCheckBox.prop("checked", false)
-        }
-        this.checkedMonitors.splice(this.checkedMonitors.indexOf(this.monitorList[index].id), 1)
-
-        if (this.checkedMonitors.length === 0) {
-            optionButton.addClass("disabled")
-        }
-    }
-
-    clearChecked() {
-        // 取消全选
-        this.checkedMonitors = []
-        allCheckBox.prop("checked", false)
-        monitorsList.find("input[name=chk]").each(function () {
-            this.checked = false
-        })
-        optionButton.addClass("disabled")
-    }
-
-    allChecked() {
-        // 全选
-        let that = this
-        monitorsList.find("input[name=chk]").each(function (i, item) {
-            if (!item.checked) {
-                that.checkedMonitors.push(that.monitorList[i].id)
-                item.checked = true
-            }
-        })
-        optionButton.removeClass("disabled")
-    }
+    })
+    return result
 }
-
-class QueryParams {
-    constructor(queryURL) {
-        this.queryURL = queryURL
-        this.currentPage = 1
-        this.pageSize = 10
-        this.orderKey = "id"
-        this.orderPref = "-"
-        this.filter = []
-    }
-
-    changeOrderKey(key) {
-        this.orderKey = key
-        this.currentPage = 1;
-        refreshTable()
-    }
-
-    changeOrderPref() {
-        if (this.orderPref === "-") {
-            this.orderPref = ""
-            orderChangeBtn.html("<i class='ti-bar-chart'></i>")
-        } else {
-            this.orderPref = "-"
-            orderChangeBtn.html("<i class='ti-bar-chart-alt'></i>")
-        }
-        this.currentPage = 1;
-        refreshTable()
-    }
-
-    changeCurrentPage(newPage) {
-        this.currentPage = newPage
-        refreshTable()
-    }
-}
-
-// 常量
-let tableData = new TableData()
-let queryParams = new QueryParams(monitorQueryURL)
-
 
 // 重新获取表格数据
-function refreshTable() {
+function refreshTable(successCallback, errorCallback) {
+    let f = useFilter ? getFilterData() : []
+    console.log(f)
     $.ajax({
         method: "GET",
-        url: queryParams.queryURL,
+        url: monitorQueryURL,
         traditional: true,
         data: {
-            currentPage: queryParams.currentPage,
-            pageSize: queryParams.pageSize,
-            order: queryParams.orderPref + queryParams.orderKey,
-            filter: JSON.stringify(queryParams.filter.filter(f => {
-                return f["value"] !== ""
-            })),
+            currentPage: currentPage,
+            pageSize: pageSizeInput.val(),
+            orderCol: orderCol,
+            ascendingOrder: ascendingOrder,
+            filter: JSON.stringify(f),
         },
         success: function (data) {
-            queryParams.currentPage = data["currentPage"]
-            tableData.setMonitors(data["monitorList"])
-            tableData.changePageNums(data["pageNums"])
+            currentPage = data["currentPage"]
+            monitorListData = data["monitorList"]
+            pageNums = data["pageNums"]
+            setTableBodyHTML()
+            setPaginationHTML()
+            if (successCallback) {
+                successCallback(data)
+            }
         },
         error: function (e) {
-            alert(e)
+            console.log(e)
+            if (errorCallback) {
+                errorCallback(e)
+            }
         }
     })
 }
 
 // 绘制表格
-function drawTable() {
-    let data = tableData.monitorList
+function setTableBodyHTML() {
     monitorsList.html("")
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < monitorListData.length; i++) {
+        let monitor = monitorListData[i]
         monitorsList.append(
-            "<tr>" +
-            "<th class='custom-control custom-checkbox' scope='row'>" +
-            "<label class='monitor-checkbox'>" +
-            "<input type='checkbox' name='chk'> " + "<span>" + data[i].id + "</span>" +
+            "<tr class='align-middle'>" +
+            "<td class='custom-control custom-checkbox text-start'>" +
+            "<label class='monitor-checkbox my-auto'>" +
+            "<input type='checkbox' name='chk'> " + "<span>" + monitor["id"] + "</span>" +
             "</label>" +
-            "</th>" +
-            "<td class='clickable table-row-clickable'>" + data[i].name + "</td>" +
-            "<td class='clickable table-row-clickable'>" + data[i].create_date + "</td>" +
-            "<td class='clickable table-row-clickable'>" + data[i].source + "</td>" +
+            "</td>" +
+            "<td class='clickable table-row-clickable'>" + monitor["name"] + "</td>" +
+            "<td class='clickable table-row-clickable'>" + monitor["create_date"] + "</td>" +
+            "<td class='clickable table-row-clickable'>" + monitor["source"] + "</td>" +
             "<td class='text-center'>" +
             "<label class='form-check-label form-switch helmet-detect-switch'>" +
             "<input class='form-check-input' type='checkbox' name='det' role='switch' " +
-            (data[i].helmet_detect ? "checked" : "") + ">" +
+            (monitor["helmet_detect"] ? "checked" : "") + ">" +
             "</label>" +
             "</td>" +
             "<td>" +
             "<ul class='d-flex justify-content-center'>" +
             "<li class='me-3'><i class='clickable table-row-clickable fa fa-edit text-secondary'></i></li>" +
-            "<li><i class='ti-trash text-danger'></i></li>" +
+            "<li>" +
+            "<i class='ti-trash text-danger' data-bs-toggle='modal' data-bs-target='#delete-confirm-modal'></i>" +
+            "</li>" +
             "</ul>" +
             "</td>" +
             " </tr>"
@@ -181,77 +98,59 @@ function drawTable() {
     }
 }
 
-function getEffectiveFilterNum() {
-    let count = 0
-    for (let i = 0; i < queryParams.filter.length; i++) {
-        if (queryParams.filter[i].value !== "") {
-            count++
-        }
-    }
-    return count
-}
-
-// 获取分页栏的html
-function getPageItems() {
-    let curPage = queryParams.currentPage
-    let pageNums = tableData.pageNums
+// 绘制分页栏
+function setPaginationHTML() {
     let s, e
-    if (pageNums <= 7 || curPage <= 4) {
+    if (pageNums <= 7 || currentPage <= 4) {
         s = 1
         e = pageNums
-    } else if (curPage + 3 >= pageNums) {
+    } else if (currentPage + 3 >= pageNums) {
         s = pageNums - 6
         e = pageNums
     } else {
-        s = curPage - 3
-        e = curPage + 3
+        s = currentPage - 3
+        e = currentPage + 3
     }
-
-    let pageItems =
-        "<ul class='pagination justify-content-center'>"
-    // 前一页
-    pageItems +=
-        "<li class='page-item pre-page " + (curPage === 1 ? "disabled" : "") + "'>" +
-        "<span class='page-link rounded'>前一页</span>" +
-        "</li>"
-    // 页数
-    for (let i = s; i <= e; i++) {
-        pageItems +=
-            "<li class='page-item page-num " + (curPage === i ? "active" : "") + "'>" +
-            "<span class='page-link rounded'>" + i + "</span>" +
-            "</li>"
-    }
-    // 下一页
-    pageItems +=
-        "<li class='page-item next-page " + (curPage === pageNums ? "disabled" : "") + "'>" +
-        "<span class='page-link rounded'>后一页</span>" +
-        "</li>"
-    // 页面快捷跳转
-    pageItems +=
-        "<li class='page-num-input-content'>" +
-        "<div class='input-group h-100 align-items-center'>" +
-        "<div>共 " + pageNums + " 页，跳至</div>" +
-        "<input id='page-num-input' class='form-control rounded center-content h-75'>" +
-        "<div>页</div>" +
-        "</div>" +
-        "</li>"
-    pageItems +=
-        "</ul>"
-    return pageItems
-}
-
-// 绘制分页栏
-function drawPagination() {
     // 绘制分页栏
-    pagination.html("")
-    if (tableData.pageNums <= 1) {
-        return null
+    if (monitorListData.length === 0) {
+        $("#pagination").addClass("visually-hidden")
+    } else {
+        $("#pagination").removeClass("visually-hidden")
+        if (pageNums === 1) {
+            $(".multi-page").addClass("visually-hidden")
+            pageNumTipArea.addClass("ms-auto")
+            pageNumTipArea.html('共 1 页')
+        } else {
+            pageNumArea.html("")
+            for (let i = s; i <= e; i++) {
+                pageNumArea.append(
+                    "<button type='button' class='page-num btn btn-xs " +
+                    "btn" + (i === currentPage ? "" : "-outline") + "-primary ms-1 border'>" +
+                    i +
+                    "</button>"
+                )
+            }
+            $(".multi-page").removeClass("visually-hidden")
+            pageNumTipArea.html(
+                '共 ' + pageNums + ' 页，跳至' +
+                '<label class="mx-1 mb-0">' +
+                "<input class='pagination-input rounded form-control form-control-sm' type='text' name='num'>" +
+                '</label>' +
+                '页'
+            )
+            if (currentPage === 1) {
+                pagePreviousBtn.addClass("disabled")
+            } else {
+                pagePreviousBtn.removeClass("disabled")
+            }
+
+            if (currentPage === pageNums) {
+                pageNextBtn.addClass("disabled")
+            } else {
+                pageNextBtn.removeClass("disabled")
+            }
+        }
     }
-    pagination.html(
-        "<nav aria-label='...'>" +
-        getPageItems() +
-        "</nav>"
-    )
 }
 
 // 判断class中是否包含disabled
@@ -272,61 +171,53 @@ function changeDetect(pkList, detect) {
         },
         success: function (data) {
             if (data["code"] === 403) {
-                alert(data["msg"])
-                console.log(data)
+                customAlert("warning", "", data["msg"])
             } else if (data["code"] === 200) {
-                monitorsList.find("input[name=det]").each(function (i, item) {
-                    if (tableData.checkedMonitors.indexOf(tableData.monitorList[i].id) >= 0 &&
-                        item.checked !== detect) {
-                        item.checked = detect
+                monitorsList.find("tr").each(function () {
+                    if ($(this).find("input[name=chk]")[0].checked) {
+                        $(this).find("input[name=det]").prop("checked", detect)
                     }
                 })
-                console.log(data["msg"])
+                customAlert("success", "", data["msg"])
             }
         },
         error: function (e) {
-
+            console.log(e)
+            customAlert("error", "请求失败！")
         }
     })
 }
 
-function filterHTML(selectHTML) {
-    return "<div class='filter-item row align-items-start'>" +
-        "<div class='col-3 text-end fs-14'>" + selectHTML + "</div>" +
+function getFilterData() {
+    let filters = []
+    filterList.find(".filter-item").each(function () {
+        let val = $(this).find("input[name=value]").val()
+        if (val !== "") {
+            filters.push({
+                operator: $(this).find("select[name=operator]").val(),
+                col: $(this).find("select[name=col]").val(),
+                operation: $(this).find("select[name=operation]").val(),
+                value: val,
+            })
+        }
+    })
+    return filters
+}
 
-        "<div class='col-2'>" +
-        "<select class='col-select form-select form-select-sm'>" +
-        "<option value='id' selected>ID</option>" +
-        "<option value='name'>监控名</option>" +
-        "<option value='create_date'>创建日期</option>" +
-        "<option value='source'>监控源</option>" +
-        "<option value='detect'>安全帽检测</option>" +
-        "</select>" +
-        "</div>" +
+function setFilterNumBadge() {
+    let filterNums = 0
+    filterList.find(".filter-item").each(function () {
+        if ($(this).find("input[name=value]").val() !== "") {
+            filterNums++
+        }
+    })
 
-        "<div class='col-2'>" +
-        "<select class='filter-select form-select form-select-sm fs-14'>" +
-        "<option value='=' selected>=</option>" +
-        "<option value='≠'>≠</option>" +
-        "<option value='>'>></option>" +
-        "<option value='<'><</option>" +
-        "<option value='≥'>≥</option>" +
-        "<option value='≤'>≤</option>" +
-        "</select>" +
-        "</div>" +
-
-        "<div class='col-5 navbar'>" +
-        "<input class='value-input form-control form-control-sm fs-14' type='number' min='0'>" +
-        "<button class='remove-filter btn btn-sm btn-primary justify-content-end'>" +
-        "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' " +
-        "class='bi bi-trash3-fill' viewBox='0 0 16 16'>" +
-        "<path d='M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z'>" +
-        "</path>" +
-        "</svg>" +
-        "</button>" +
-        "</div>" +
-
-        "</div>"
+    if (filterNums > 0) {
+        filterNumsBadge.html(filterNums)
+        filterNumsBadge.removeClass("d-none")
+    } else {
+        filterNumsBadge.addClass("d-none")
+    }
 }
 
 // 初始
@@ -337,237 +228,285 @@ $(() => {
 // 监听
 monitorsList.on("click", ".table-row-clickable", function () {
     let index = $(this).parent().index()
-    window.location.href = monitorInfoURL.replace("0", tableData.getMonitorId(index))
+    window.location.href = monitorInfoURL.replace("0", monitorListData[index]["id"])
 })
 
 monitorsList.on("click", ".monitor-checkbox", function () {
     // 每行的checkbox
-    let index = $(this).parent().parent().index()
-    if ($(this).children("input").is(":checked")) {
-        tableData.check(index)
+    let n = getCheckedMonitorID().length
+    allCheckBox.prop("checked", n === monitorListData.length)
+    if (n === 0) {
+        $("button.option").addClass("disabled")
     } else {
-        tableData.uncheck(index)
+        $("button.option").removeClass("disabled")
     }
+})
+
+monitorsList.on("click", ".ti-trash", function () {
+    let index = $(this).parent().parent().parent().parent().index()
+    let m = monitorListData[index]
+    deleteMonitors = [m["id"]]
+    $("#delete-confirm-modal").find(".modal-body").html(
+        "确定要将监控 '" + m["name"] + "' 删除吗? (ID:" + m["id"] + "，源: '" + m["source"] + "')"
+    )
 })
 
 monitorsList.on("click", ".helmet-detect-switch", function () {
     // 安全帽检测开关
-    let id = tableData.getMonitorId($(this).parent().parent().index())
+    let id = monitorListData[$(this).parent().parent().index()]["id"]
     let detect = $(this).children("input").is(":checked")
     changeDetect([id], detect)
 })
 
-monitorsList.on("click", ".connection-test", function () {
-    // 每行的连接测试按钮
+pageSizeInput.keyup(function () {
+    this.value = this.value.replace(/\D/, "")
 })
 
-pagination.on("click", ".pre-page", function () {
-    // 上一页
-    if (!isDisabled($(this))) {
-        queryParams.changeCurrentPage(queryParams.currentPage - 1)
-    }
-})
-
-pagination.on("click", ".page-num", function () {
-    // 页面跳转按钮
-    queryParams.changeCurrentPage($(this).children("span").html())
-})
-
-pagination.on("click", ".next-page", function () {
-    // 下一页
-    if (!isDisabled($(this))) {
-        queryParams.changeCurrentPage(queryParams.currentPage + 1)
-    }
-})
-
-pagination.on("keyup", "#page-num-input", function () {
-    let that = $(this)[0]
-    that.value = that.value.replace(/\D/, "")
-})
-
-pagination.on("keydown", "#page-num-input", function (e) {
+pageSizeInput.keydown(function (e) {
     if (e.keyCode === 13) {
         // 输入回车
-        queryParams.changeCurrentPage($(this)[0].value)
+        refreshTable()
+    }
+})
+
+pagePreviousBtn.click(function () {
+    if (!isDisabled($(this))) {
+        currentPage -= 1
+        refreshTable()
+    }
+})
+
+pageNumArea.on("click", ".page-num", function () {
+    currentPage = $(this).html()
+    refreshTable()
+})
+
+pageNextBtn.click(function () {
+    if (!isDisabled($(this))) {
+        currentPage++
+        refreshTable()
+    }
+})
+
+pageNumTipArea.on("keyup", "input[name=num]", function () {
+    this.value = this.value.replace(/\D/, "")
+})
+
+pageNumTipArea.on("keydown", "input[name=num]", function (e) {
+    if (e.keyCode === 13) {
+        // 输入回车
+        currentPage = this.value
+        refreshTable()
     }
 })
 
 allCheckBox.bind("click", function () {
-    if (this.checked) {
-        tableData.allChecked()
+    let checked = this.checked
+    monitorsList.find("input[name=chk]").each(function () {
+        $(this).prop("checked", checked)
+    })
+    if (checked) {
+        $("button.option").removeClass("disabled")
     } else {
-        tableData.clearChecked()
+        $("button.option").addClass("disabled")
     }
 })
 
-$("#open-checked-monitor-detect").click(function () {
+$("#open-checked-detect").click(function () {
     if (!isDisabled($(this))) {
-        changeDetect(tableData.checkedMonitors, true)
+        changeDetect(getCheckedMonitorID(), true)
     }
 })
 
-$("#close-checked-monitor-detect").click(function () {
+$("#close-checked-detect").click(function () {
     if (!isDisabled($(this))) {
-        changeDetect(tableData.checkedMonitors, false)
+        changeDetect(getCheckedMonitorID(), false)
     }
 })
 
-$("#test-checked-monitor-source").click(function () {
-    monitorsList.find(".connection-test").each(function () {
-        // TODO: 显示测试连接结果
-        this.click()
+$("#delete-checked").click(function () {
+    deleteMonitors = getCheckedMonitorID()
+    $("#delete-confirm-modal").find(".modal-body").html(
+        "确定要将选中的 " + deleteMonitors.length + " 个监控删除吗？"
+    )
+})
+
+$("#btn-refresh").click(function () {
+    refreshTable(function (_) {
+        customAlert("success", "刷新成功！", "")
+    }, function (_) {
+        customAlert("error", "刷新失败！", "")
     })
 })
 
-$("#delete-checked-monitor").click(function () {
-    $.ajax({
-        method: "POST",
-        url: monitorDeleteURL,
-        data: {
-            pk_list: JSON.stringify(tableData.checkedMonitors),
-            csrfmiddlewaretoken: csrfToken,
-        },
-        success: function (data) {
-            console.log(data)
-            refreshTable()
-        },
-        error: function (e) {
-            console.log(e)
+$(".filter-content").click(function (e) {
+    e.stopPropagation();
+})
+
+$(".btn.filter-add").click(function () {
+    let filterItem = $('<div class="row filter-item"></div>')
+    filterItem.append(
+        '<label class="col-2 p-1 d-flex mb-0">' +
+        '<select class="form-select form-select-sm" name="operator">' +
+        '<option value="and" selected>且 (and)</option>' +
+        '<option value="or">或 (or)</option>' +
+        '</select>' +
+        '</label>'
+    )
+    let colSelect = $(
+        '<label class="col-3 p-1 mb-0">' +
+        '<select class="form-select form-select-sm" name="col">' +
+        '<option value="id" selected>ID</option>' +
+        '<option value="name">监控名</option>' +
+        '<option value="create_date">创建日期</option>' +
+        '<option value="source">监控源</option>' +
+        '<option value="detect">安全帽检测</option>' +
+        '</select>'
+    )
+    colSelect.data('pre', $(this).val());
+    filterItem.append(colSelect)
+
+    filterItem.append(
+        '</label>' +
+        '<label class="col-2 p-1 mb-0">' +
+        '<select class="form-select form-select-sm fs-14" name="operation">' +
+        '<option value="=" selected>=</option>' +
+        '<option value="≠">≠</option>' +
+        '<option value=">">></option>' +
+        '<option value="<"><</option>' +
+        '<option value="≥">≥</option>' +
+        '<option value="≤">≤</option>' +
+        '</select>'
+    )
+    filterItem.append(
+        '</label>' +
+        '<label class="col-4 p-1 mb-0">' +
+        '<input type="number" name="value" min="1" class="form-control form-control-sm fs-14">' +
+        '</label>'
+    )
+    filterItem.append(
+        '<div class="col-1 p-1">' +
+        '<button type="button" class="remove btn btn-outline-primary btn-xs d-flex h-100">' +
+        '<span class="ti-trash my-auto"></span>' +
+        '</button>' +
+        '</div>'
+    )
+    filterList.append(filterItem)
+})
+
+filterList.on("change", "select[name=col]", function () {
+    let filterItem = $(this).parent().parent()
+    let operationNode = filterItem.find("select[name=operation]")
+    let valueNode = filterItem.find("input[name=value]")
+    let val = $(this).val()
+    let pre = $(this).data('pre')
+    valueNode.val("")
+    if (val === "name" || val === "source") {
+        if (pre !== "name" && pre !== "source") {
+            operationNode.html(
+                "<option value='contain' selected>包含</option>" +
+                "<option value='not_contain'>不包含</option>" +
+                "<option value='pattern'>正则</option>" +
+                "<option value='equal'>等于</option>" +
+                "<option value='not_equal'>不等于</option>"
+            )
+        }
+        operationNode.prop("disabled", false)
+        valueNode.prop("type", "text")
+    } else if (val === "id" || val === "create_date") {
+        if (pre !== "id" && pre !== "create_date") {
+            operationNode.html(
+                "<option value='=' selected>=</option>" +
+                "<option value='≠'>≠</option>" +
+                "<option value='>'>></option>" +
+                "<option value='<'><</option>" +
+                "<option value='≥'>≥</option>" +
+                "<option value='≤'>≤</option>"
+            )
+        }
+        operationNode.prop("disabled", false)
+        valueNode.prop("type", val === "id" ? "number" : "datetime-local")
+    } else if (val === "detect") {
+        operationNode.html("<option value='=' selected>=</option>")
+        operationNode.prop("disabled", true)
+    }
+    $(this).data('pre', val);
+})
+
+filterList.on("click", ".btn.remove", function () {
+    if (!isDisabled($(this))) {
+        $(this).parent().parent().remove()
+    }
+})
+
+$("select[name=orderCol]").change(function () {
+    orderCol = $(this).val()
+    refreshTable()
+})
+
+$(".btn.clean-filters").click(function () {
+    filterList.find(".filter-item").each(function (i, item) {
+        if (i === 0) {
+            $(item).find("input[name=value]").val("")
+        } else {
+            $(item).remove()
         }
     })
 })
 
-$("#btn-refresh").click(function () {
+$(".btn.dnt-use-filter").click(function () {
+    if (useFilter) {
+        useFilter = false
+        filterNumsBadge.addClass("d-none")
+        refreshTable()
+    }
+})
+
+$(".use-filter").click(function () {
+    if (!useFilter) {
+        useFilter = true
+        setFilterNumBadge()
+        refreshTable()
+    }
+})
+
+$("#filter-set-modal").bind("show.bs.modal", function () {
+    if (useFilter) {
+        setFilterNumBadge()
+    }
+})
+
+$("#order-change").click(function () {
+    ascendingOrder = !ascendingOrder
+    let icon = $(this).children("i")
+    if (ascendingOrder) {
+        icon.addClass("fa-sort-amount-desc")
+        icon.removeClass("fa-sort-amount-asc")
+    } else {
+        icon.addClass("fa-sort-amount-asc")
+        icon.removeClass("fa-sort-amount-desc")
+    }
+    currentPage = 1
     refreshTable()
 })
 
-$("#filter-content").click(function (e) {
-    e.stopPropagation();
-})
-
-addFilterBtn.click(function () {
-    if (queryParams.filter.length === 0) {
-        filterList.html(filterHTML(
-            "<div class='mt-1 fs-14'>条件</div>"
-        ))
-        $(this).children("span").html("添加其它筛选器")
-    } else {
-        filterList.append(filterHTML(
-            "<select class='operator-select form-select form-select-sm fs-14'>" +
-            "<option value='and' selected>且(and)</option>" +
-            "<option value='or'>或(or)</option>" +
-            "</select>"
-        ))
-    }
-    queryParams.filter.push({
-        operator: "and",
-        col: "id",
-        filter: "=",
-        value: "",
+$("button.delete-confirm").click(function () {
+    $.ajax({
+        method: "POST",
+        traditional: true,
+        url: monitorDeleteURL,
+        data: {
+            pk_list: JSON.stringify(deleteMonitors),
+            csrfmiddlewaretoken: csrfToken,
+        },
+        success: function (data) {
+            customAlert("success", "删除成功！", data["msg"])
+            refreshTable()
+        },
+        error: function (e) {
+            console.log(e)
+            customAlert("danger", "请求失败！")
+        }
     })
 })
 
-filterList.on("change", ".operator-select", function () {
-    let parent = $(this).parent().parent()
-    let i = parent.index()
-    queryParams.filter[i].operator = $(this).val()
-    if (parent.find(".value-input").value !== "") {
-        refreshTable()
-    }
-})
-
-filterList.on("change", ".col-select", function () {
-    let parentNode = $(this).parent().parent()
-    let filterNode = parentNode.find(".filter-select")
-    let valueNode = parentNode.find(".value-input")
-    let i = parentNode.index()
-    let val = $(this).val()
-    queryParams.filter[i].col = val
-    queryParams.filter[i].value = ""
-    valueNode[0].value = ""
-    if (val === "name" || val === "source") {
-        queryParams.filter[i].filter = "contain"
-        filterNode.html(
-            "<option value='contain' selected>包含</option>" +
-            "<option value='not_contain'>不包含</option>" +
-            "<option value='pattern'>正则</option>" +
-            "<option value='equal'>等于</option>" +
-            "<option value='not_equal'>不等于</option>"
-        )
-        filterNode.prop("disabled", false)
-        valueNode.prop("type", "text")
-    } else if (val === "id") {
-        queryParams.filter[i].filter = "="
-        filterNode.html(
-            "<option value='=' selected>=</option>" +
-            "<option value='≠'>≠</option>" +
-            "<option value='>'>></option>" +
-            "<option value='<'><</option>" +
-            "<option value='≥'>≥</option>" +
-            "<option value='≤'>≤</option>"
-        )
-        filterNode.prop("disabled", false)
-        valueNode.prop("type", "number")
-    } else if (val === "create_date") {
-        queryParams.filter[i].filter = "="
-        filterNode.html(
-            "<option value='=' selected>=</option>" +
-            "<option value='≠'>≠</option>" +
-            "<option value='>'>></option>" +
-            "<option value='<'><</option>" +
-            "<option value='≥'>≥</option>" +
-            "<option value='≤'>≤</option>"
-        )
-        filterNode.prop("disabled", false)
-        valueNode.prop("type", "datetime-local")
-    } else if (val === "detect") {
-        queryParams.filter[i].filter = "="
-        filterNode.html("<option value='=' selected>=</option>")
-        filterNode.prop("disabled", true)
-    }
-})
-
-filterList.on("change", ".filter-select", function () {
-    let i = $(this).parent().parent().index()
-    queryParams.filter[i].filter = $(this).val()
-})
-
-filterList.on("change keydown", ".value-input", function () {
-    let i = $(this).parent().parent().index()
-    let that = $(this)[0]
-    queryParams.filter[i].value = that.value
-    if (that.value !== "") {
-        refreshTable()
-    }
-    let filterNum = getEffectiveFilterNum()
-    if (filterNum === 0) {
-        filterBadge.addClass("d-none")
-    } else {
-        filterBadge.removeClass("d-none")
-        filterBadge.html(filterNum)
-    }
-})
-
-filterList.on("click", ".remove-filter", function () {
-    let filterItem = $(this).parent().parent()
-    filterItem.remove()
-    queryParams.filter.splice(filterItem.index(), 1)
-    if (queryParams.filter.length === 0) {
-        addFilterBtn.children("span").html("添加筛选器")
-        filterList.html("<span class='no-filter-text mt-2'>未启用筛选</span>")
-    }
-    if (getEffectiveFilterNum() === 0) {
-        filterBadge.addClass("d-none")
-    }
-    if (filterItem.find(".value-input").value !== "") {
-        refreshTable()
-    }
-})
-
-$("#order-select").change(function () {
-    queryParams.changeOrderKey($(this)[0].value)
-})
-
-orderChangeBtn.click(function () {
-    queryParams.changeOrderPref()
-})

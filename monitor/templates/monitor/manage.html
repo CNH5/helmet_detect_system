@@ -1,4 +1,5 @@
 {% extends "monitor/base.html" %}
+
 {% block title %}
     <title>监控设备管理</title>
 {% endblock %}
@@ -17,121 +18,217 @@
 {% block main-content %}
     <div class="main-content-inner py-3">
         <div class="card">
-            <div class="card-body">
+            <div class="card-body py-3">
                 <!-- table options start -->
-                <div id="table-options" class="d-sm-flex justify-content-between align-items-center">
+                <div class="d-flex w-100">
+                    <!-- left option area start -->
                     <div class="d-inline-flex">
                         <!-- 批量操作 area start -->
-                        <div class="btn-group" role="group">
-                            <button id="option-button"
-                                    class="btn btn-outline-primary btn-sm dropdown-toggle btn-dropdown"
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="option btn btn-outline-primary btn-xs disabled rounded"
                                     data-bs-toggle="dropdown" aria-expanded="false">
-                                操作
+                                <span class="me-1">批量操作</span>
+                                <i class="fa fa-angle-down"></i>
                             </button>
                             <ul class="dropdown-menu">
-                                <li id="test-checked-monitor-source" class="dropdown-item c-p">
-                                    连接测试
+                                <li>
+                                    <a href="javascript:" id="open-checked-detect" class="dropdown-item">
+                                        <i class="fa fa-toggle-on"></i>
+                                        <span class="ms-1">开启安全帽检测</span>
+                                    </a>
                                 </li>
-                                <li id="open-checked-monitor-detect" class="dropdown-item c-p">
-                                    开启安全帽检测
+                                <li>
+                                    <a href="javascript:" id="close-checked-detect" class="dropdown-item">
+                                        <i class="fa fa-toggle-off"></i>
+                                        <span class="ms-1">关闭安全帽检测</span>
+                                    </a>
                                 </li>
-                                <li id="close-checked-monitor-detect" class="dropdown-item c-p">
-                                    关闭安全帽检测
-                                </li>
-                                <li id="delete-checked-monitor" class="dropdown-item c-p menu-looks-danger">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                         class="bi bi-trash3-fill" viewBox="0 0 16 16">
-                                        <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
-                                    </svg>
-                                    删除监控
+                                <li>
+                                    <a href="javascript:" id="delete-checked"
+                                       class="dropdown-item menu-looks-danger d-flex"
+                                       data-bs-toggle='modal' data-bs-target='#delete-confirm-modal'>
+                                        <div style="width: 16px" class="text-center">
+                                            <i class="fa fa-trash"></i>
+                                        </div>
+                                        <span class="ms-2">删除监控</span>
+                                    </a>
                                 </li>
                             </ul>
                         </div>
                         <!-- 批量操作 area end -->
-                        <!-- filter area start -->
-                        <div class="btn-group ms-2" role="group">
-                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle btn-dropdown"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                筛选 <span class="badge text-bg-secondary d-none">0</span>
+                        <div class="ms-2">
+                            <button type="button" class="btn btn-primary btn-xs rounded"
+                                    data-bs-toggle='modal' data-bs-target='#filter-set-modal'>
+                                <span class="me-1">筛选</span>
+                                <i class="fa fa-filter"></i>
+                                <span class="filter-nums badge text-bg-secondary d-none ms-1">0</span>
                             </button>
-                            <div id="filter-content" class="dropdown-menu">
-                                <div id="filter-list">
-                                    <span class="no-filter-text mt-2">未启用筛选</span>
-                                </div>
-                                <div class="navbar filter-add" style="width: 100%">
-                                    <button id="btn-add-filter" type="button"
-                                            class="btn btn-outline-secondary btn-mini-bottom-left">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                             fill="currentColor"
-                                             class="bi bi-plus" viewBox="0 0 18 18">
-                                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
-                                        </svg>
-                                        <span>添加筛选器</span>
-                                    </button>
-                                    <button id="expand-filter"
-                                            class="btn btn-primary btn-mini-bottom-right justify-content-end">
-                                        >
-                                    </button>
-                                </div>
-                            </div>
                         </div>
-                        <!-- filter area end -->
                         <!-- order area start -->
-                        <div class="input-group ms-3" role="group">
-                            <label for="order-select" class="me-2 mb-0 mt-2">排序:</label>
-                            <select id="order-select" class="form-select rounded-start">
+                        <div class="my-auto ms-3 me-2">排序:</div>
+                        <label class="btn-group btn-group-sm mb-0" role="group">
+                            <select class="form-select form-select-sm rounded-start" name="orderCol">
                                 <option value="id" selected>ID</option>
                                 <option value="name">监控名</option>
                                 <option value="create_date">创建日期</option>
                             </select>
-                            <button id="order-change" class="btn btn-outline-secondary btn-sm">
-                                <i class="ti-bar-chart-alt"></i>
+                            <button type="button" id="order-change" class="btn btn-xs btn-outline-secondary my-auto">
+                                <i class="fa fa-sort-amount-desc"></i>
                             </button>
-                        </div>
+                        </label>
                         <!-- order area end -->
                     </div>
-                    <div class="custom-select border-0">
-                        <button id="btn-refresh" class="btn btn-primary btn-sm me-1">
-                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                 style="width: 17px; height: 17px;">
-                                <path d="M5.857 4.357L4 2.5l-1 6 6-1-1.705-1.705A4.976 4.976 0 0110 5V3c-1.55 0-2.983.504-4.143 1.357zM5.527 12.237A5 5 0 0010 15v2a7 7 0 01-6.262-3.869l1.789-.894zM14.143 15.643L16 17.5l1-6-6 1 1.706 1.706A4.976 4.976 0 0110 15v2c1.55 0 2.983-.504 4.143-1.357zM14.473 7.763A5 5 0 0010 5V3a7 7 0 016.262 3.869l-1.789.894z"
-                                      fill="currentColor"></path>
-                            </svg>
+                    <!-- left option area end -->
+                    <!-- right option area start -->
+                    <div class="ms-auto d-inline">
+                        <button type="button" id="btn-refresh" class="btn btn-primary btn-xs me-1">
+                            <span class="ti-reload"></span>
                         </button>
-                        <a class="btn btn-outline-primary btn-sm" href="{% url 'monitor:create' %}">
+                        <a class="btn btn-outline-primary btn-xs" href="{% url 'monitor:create' %}">
                             添加监控
                         </a>
                     </div>
+                    <!-- right option area end -->
                 </div>
                 <!-- table options end -->
                 <!-- table content start -->
                 <table class="table mt-2">
                     <thead>
-                    <tr class="text-white">
-                        <th scope="col">
+                    <tr class="text-white text-center">
+                        <th style="width: 8%" scope="col" class="text-start">
                             <label class="mt-1 mb-0">
                                 <input type="checkbox" name="all-check-box">
-                                <span class="text-white">ID</span>
+                                <span class="text-white fw-bold">ID</span>
                             </label>
                         </th>
-                        <th scope="col">监控名</th>
-                        <th scope="col">创建日期</th>
+                        <th style="width: 24%" scope="col">监控名</th>
+                        <th style="width: 18%" scope="col">创建日期</th>
                         <th scope="col">监控源</th>
-                        <th class="text-center" scope="col">安全帽检测</th>
-                        <th class="text-center" scope="col">操作</th>
+                        <th style="width: 8%" class="text-center" scope="col">安全帽检测</th>
+                        <th style="width: 8%" class="text-center" scope="col">操作</th>
                     </tr>
                     </thead>
-                    <tbody id="monitor-list">
+                    <tbody id="monitor-list" class="text-center">
                     <!-- 监控设备表内容 -->
                     </tbody>
                 </table>
                 <!-- table content end -->
                 <!-- pagination start -->
-                <div id="pagination" class="mt-3 mb-3"></div>
+                <div id="pagination" class="mb-3 mt-4 d-flex visually-hidden">
+                    <div class="my-auto pull-left ms-2">
+                        每页
+                        <label class="mx-1 mb-0">
+                            <input class="pagination-input form-control form-control-sm"
+                                   type="text" name="page-size" value="10">
+                        </label>
+                        条数据
+                    </div>
+                    <div class="multi-page d-flex mx-auto">
+                        <div class="my-auto">
+                            <a href="javascript:" class="page-previous btn btn-xs btn-outline-primary border">
+                                上一页
+                            </a>
+                        </div>
+                        <div class="my-auto d-flex page-num-area"></div>
+                        <div class="my-auto me-auto ms-1">
+                            <a href="javascript:" class="page-next btn btn-xs btn-outline-primary border">
+                                下一页
+                            </a>
+                        </div>
+                    </div>
+                    <div class="my-auto pull-right page-num-tip-area me-3"></div>
+                </div>
                 <!-- pagination end -->
             </div>
         </div>
     </div>
+    <!-- delete confirm modal start -->
+    <div id="delete-confirm-modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <span>请确认您的操作</span>
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-sm delete-confirm" data-bs-dismiss="modal">
+                        确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- delete confirm modal end -->
+    <!-- filter config area start -->
+    <div id="filter-set-modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        <i class="fa fa-filter me-2"></i>
+                        <span>设置筛选条件</span>
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body filter-list">
+                    <div class="row filter-item">
+                        <div class="col-2 p-1 d-flex">
+                            <span class="my-auto ms-auto">筛选条件:</span>
+                        </div>
+                        <label class="col-3 p-1 mb-0">
+                            <select class='form-select form-select-sm' name="col">
+                                <option value='id' selected>ID</option>
+                                <option value='name'>监控名</option>
+                                <option value='create_date'>创建日期</option>
+                                <option value='source'>监控源</option>
+                                <option value='detect'>安全帽检测</option>
+                            </select>
+                        </label>
+                        <label class="col-2 p-1 mb-0">
+                            <select class='form-select form-select-sm fs-14' name="operation">
+                                <option value='=' selected>=</option>
+                                <option value='≠'>≠</option>
+                                <option value='>'>></option>
+                                <option value='<'><</option>
+                                <option value='≥'>≥</option>
+                                <option value='≤'>≤</option>
+                            </select>
+                        </label>
+                        <label class="col-4 p-1 mb-0">
+                            <input type="number" name="value" min="1" class="form-control form-control-sm fs-14">
+                        </label>
+                        <div class="col-1 p-1">
+                            <button type="button" class="remove btn btn-outline-primary btn-xs d-flex h-100 disabled">
+                                <span class="ti-trash my-auto"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="filter-add btn btn-outline-primary btn-xs me-2">
+                        <span class="ti-plus"></span>
+                        <span>添加筛选条件</span>
+                    </button>
+                    <button type="button" class="clean-filters btn btn-outline-secondary btn-xs me-auto">
+                        <span class="ti-brush-alt"></span>
+                        <span>清空筛选条件</span>
+                    </button>
+                    <button type="button" class="dnt-use-filter btn btn-secondary btn-xs" data-bs-dismiss="modal">
+                        不使用筛选
+                    </button>
+                    <button type="button" class="use-filter btn btn-primary btn-xs confirm-filter" data-bs-dismiss="modal">
+                        使用筛选
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- filter config area end -->
 {% endblock %}
 
 {% block script %}

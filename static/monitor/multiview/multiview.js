@@ -63,6 +63,8 @@ let monitorList = []
 let selectedMonitor = null
 let changeIndex
 
+let defaultPageSize = 5
+
 
 function setPlayerHTML() {
     return '<div class="source-player w-100 h-100 align-middle d-flex">' +
@@ -135,9 +137,60 @@ function getQueryParams() {
         }
     }
     return {
-        "currentPage": pageSizeInput.val(),
+        "currentPage": currentPage,
+        "pageSize": pageSizeInput.val(),
         "ascendingOrder": orderSelect.val() === "true",
         "filter": JSON.stringify(filters)
+    }
+}
+
+function setPaginationHTML() {
+    // 绘制分页
+    if (pageNums === 1) {
+        $(".multi-page").addClass("visually-hidden")
+        pageNumTipArea.addClass("ms-auto")
+        pageNumTipArea.html('共 1 页')
+    } else {
+        $(".multi-page").removeClass("visually-hidde")
+        pageNumTipArea.removeClass("ms-auto")
+        pageNumTipArea.html(
+            '共 ' + pageNums + ' 页，跳至' +
+            '<label class="mx-1 mb-0">' +
+            "<input class='pagination-input rounded form-control form-control-sm' type='text' name='num'>" +
+            '</label>' +
+            '页'
+        )
+        let s, e
+        if (pageNums <= 7 || currentPage <= 4) {
+            s = 1
+            e = pageNums
+        } else if (currentPage + 3 >= pageNums) {
+            s = pageNums - 6
+            e = pageNums
+        } else {
+            s = currentPage - 3
+            e = currentPage + 3
+        }
+        pageNumArea.html("")
+        for (let i = s; i <= e; i++) {
+            pageNumArea.append(
+                "<button class='page-num btn btn-xs btn" + (i === currentPage ? "" : "-outline") + "-primary ms-1 border'>" +
+                i +
+                "</button>"
+            )
+        }
+
+        if (currentPage === 1) {
+            pagePreviousBtn.addClass("disabled")
+        } else {
+            pagePreviousBtn.removeClass("disabled")
+        }
+
+        if (currentPage === pageNums) {
+            pageNextBtn.addClass("disabled")
+        } else {
+            pageNextBtn.removeClass("disabled")
+        }
     }
 }
 
@@ -174,53 +227,8 @@ function setMonitorTableHTML() {
                 '</tr>'
             )
         }
-        // 绘制分页
-        if (pageNums === 1) {
-            $(".multi-page").addClass("visually-hidden")
-            pageNumTipArea.addClass("ms-auto")
-            pageNumTipArea.html('共 1 页')
-        } else {
-            $(".multi-page").removeClass("visually-hidde")
-            pageNumTipArea.removeClass("ms-auto")
-            pageNumTipArea.html(
-                '共 ' + pageNums + ' 页，跳至' +
-                '<label class="mx-1 mb-0">' +
-                "<input class='pagination-input rounded form-control form-control-sm' type='text' name='num'>" +
-                '</label>' +
-                '页'
-            )
-            let s, e
-            if (pageNums <= 7 || currentPage <= 4) {
-                s = 1
-                e = pageNums
-            } else if (currentPage + 3 >= pageNums) {
-                s = pageNums - 6
-                e = pageNums
-            } else {
-                s = currentPage - 3
-                e = currentPage + 3
-            }
-            pageNumArea.html("")
-            for (let i = s; i < e; i++) {
-                pageNumArea.append(
-                    "<button class='page-num btn btn-xs btn" + (i === currentPage ? "" : "-outline") + "-primary ms-1 border'>" +
-                    i +
-                    "</button>"
-                )
-            }
 
-            if (currentPage === 1) {
-                pagePreviousBtn.addClass("disabled")
-            } else {
-                pagePreviousBtn.removeClass("disabled")
-            }
-
-            if (currentPage === pageNums) {
-                pageNextBtn.addClass("disabled")
-            } else {
-                pageNextBtn.removeClass("disabled")
-            }
-        }
+        setPaginationHTML()
     }
 }
 
@@ -283,6 +291,8 @@ $(() => {
     colInput.prop("value", colNums)
     reviewContainer.css("grid-template-columns", "repeat(" + colNums + ", 1fr)")
     reviewContainer.css("grid-template-rows", "repeat(" + rowNums + ", 1fr)")
+
+    pageSizeInput.prop("value", defaultPageSize)
 })
 
 rowInput.keyup(function () {
@@ -473,7 +483,7 @@ pageNumTipArea.on("keyup", "input[name=num]", function () {
     this.value = this.value.replace(/\D/, "")
 })
 
-pageNumTipArea.on("keydown", "input[name=num]", function () {
+pageNumTipArea.on("keydown", "input[name=num]", function (e) {
     if (e.keyCode === 13) {
         // 输入回车
         currentPage = this.value
@@ -481,15 +491,30 @@ pageNumTipArea.on("keydown", "input[name=num]", function () {
     }
 })
 
+pagePreviousBtn.click(function () {
+    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
+        currentPage--
+        queryMonitor()
+    }
+})
+
 pageNumArea.on("click", ".page-num", function () {
-    console.log($(this).html())
+    currentPage = $(this).html()
+    queryMonitor()
+})
+
+pageNextBtn.click(function () {
+    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
+        currentPage++
+        queryMonitor()
+    }
 })
 
 pageSizeInput.keyup(function () {
     this.value = this.value.replace(/\D/, "")
 })
 
-pageSizeInput.keydown(function () {
+pageSizeInput.keydown(function (e) {
     if (e.keyCode === 13) {
         // 输入回车
         queryMonitor()

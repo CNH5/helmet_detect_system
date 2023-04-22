@@ -83,6 +83,7 @@ def update_info(request, monitor_id: int):
 
 
 @require_POST
+@transaction.atomic
 def update_detect(request):
     """
     修改监控检测状态
@@ -94,36 +95,35 @@ def update_detect(request):
     pk_list = data.get("pk_list")
     detect = data.get("detect")
 
-    monitors = MonitorInfo.objects.filter(
-        pk__in=pk_list,
-        helmet_detect=not detect
-    )
+    monitors = []
+    for monitor in MonitorInfo.objects.all().filter(pk__in=pk_list, helmet_detect=not detect):
+        monitors.append(monitor)
+        monitor.helmet_detect = detect
+        if detect:
+            detect_pool.add_thread(monitor)
+        else:
+            detect_pool.remove_thread(monitor.pk)
 
-    # 开启或停止检测
-    if (n := monitors.update(helmet_detect=detect)) > 0:
-        for monitor in monitors:
-            if detect:
-                detect_pool.add_thread(monitor)
-            else:
-                detect_pool.remove_thread(monitor.pk)
+    n = MonitorInfo.objects.bulk_update(monitors, ["helmet_detect"])
+
     return JsonResponse({"code": 200, "msg": f"修改了 {n} 条数据"})
 
 
 def load_filter(request) -> Q:
     q = None
     for f in json.loads(request.GET.get("filter", "[]")):
-        if f.get("operator") and f.get("col") and f.get("operation") and f.get("value"):
+        if f.get("col") and f.get("operation") and f.get("value"):
             if f["col"] in ["name", "source"]:
                 if f["col"] not in ["contains", "regex", "exact"]:
                     f["operation"] = "contains"
             elif f["col"] in ["create_date", "pk", "id"]:
-                if f.get("operation") not in ["exact", "gt", "lt", "gte", "lte"]:
+                if f.get("operation") not in ["exact", "gt", "lt", "gte", "lte", "exact", ""]:
                     f["operation"] = "exact"
             elif f["col"] == "detect":
                 f["operation"] = ""
             else:
                 continue
-            key = (f["col"] + "__" + f["operation"]) if f["operation"] != "" else f["col"]
+            key = f["col"] + (("__" + f["operation"]) if f["operation"] != "" else "")
             qi = Q(**{key: f["value"]})
             if f.get("not"):
                 qi = ~qi
@@ -220,7 +220,7 @@ def review_source(_, monitor_id):
             if (frame := detect_pool.get_detected_frame(monitor_id)) is None:
                 if cap is None:
                     m = MonitorInfo.objects.filter(id=monitor_id)
-                    if m.count() > 0:
+                    if m.exists():
                         m = m[0]
                         source = int(m.source) if INTEGER_PATTERN.match(m.source) else m.source
                         cap = cv2.VideoCapture(source)

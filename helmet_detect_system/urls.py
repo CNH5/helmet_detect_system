@@ -19,8 +19,12 @@ from django.views.static import serve
 
 from helmet_detect_system import settings
 
+from . import views
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("overview/", views.overview, name="overview"),
+
     re_path(r"^", include("detect.urls")),
     re_path(r"^", include("monitor.urls")),
 

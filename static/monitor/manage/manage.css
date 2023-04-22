@@ -1,11 +1,3 @@
-#table-options {
-    height: 40px;
-}
-
-.c-p {
-    cursor: pointer;
-}
-
 .table-header-left {
     float: left;
 }
@@ -18,32 +10,6 @@
     cursor: pointer;
 }
 
-.pre-page {
-    margin-right: 3px;
-    cursor: pointer;
-}
-
-.page-num {
-    padding-left: 3px;
-    padding-right: 3px;
-    cursor: pointer;
-}
-
-.next-page {
-    margin-left: 3px;
-    cursor: pointer;
-}
-
-#page-num-input {
-    width: 55px;
-    margin-left: 6px;
-    margin-right: 6px;
-}
-
-.page-num-input-content {
-    margin-left: 20px;
-}
-
 .menu-looks-danger {
     color: #ea5d6a;
 }
@@ -52,30 +18,13 @@
     color: #d00;
 }
 
-#filter-content.show {
-    display: inline-block;
-    width: auto;
-    min-width: 400px;
+.filter-content {
     padding: 5px;
     font-size: 14px;
 }
 
 .btn-dropdown {
     width: 80px;
-}
-
-.filter-add {
-    padding: 0;
-}
-
-.btn-mini-bottom-left {
-    scale: 65%;
-    transform-origin: bottom left;
-}
-
-.btn-mini-bottom-right {
-    scale: 60%;
-    transform-origin: bottom right;
 }
 
 .no-filter-text {
@@ -90,47 +39,6 @@
     margin-left: 0;
 }
 
-.form-add-input {
-    font-size: 14px;
-}
-
-.submit-row {
-    padding-top: 15px;
-}
-
-#source-review {
-    aspect-ratio: 16/9;
-}
-
-#form-monitor-add {
-    margin-top: 10px;
-}
-
-.review-img {
-    width: 100%;
-    height: 100%;
-}
-
-.filter-item > [class*="col-"] {
-    padding-left: 2px;
-    padding-right: 2px;
-}
-
-.filter-item > [class*="col-"] > .row {
-    width: 100%;
-    margin-left: 0;
-}
-
-.filter-item > .navbar {
-    padding-left: 1px;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-.remove-filter {
-    margin-left: 2px;
-}
-
 .fs-14 {
     font-size: 14px;
 }
@@ -143,10 +51,26 @@ thead {
     background-color: #1089a3;
 }
 
-.card-body{
+.card-body {
     padding: 10px 15px 0;
 }
 
-.header-title{
+.header-title {
     margin-bottom: 0;
+}
+
+.page-previous.disabled, .page-next.disabled {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: black;
+}
+
+.pagination-input {
+    width: 50px;
+}
+
+@media (min-width: 992px) {
+    .modal-md {
+        --bs-modal-width: 700px
+    }
 }
