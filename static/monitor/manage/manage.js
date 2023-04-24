@@ -1,22 +1,13 @@
 let monitorsList = $("#monitor-list")
 let allCheckBox = $("input[name=all-check-box]")
+let orderCol = $("select[name=orderCol]")
 let filterList = $(".filter-list")
 let filterNumsBadge = $(".badge.filter-nums")
 
-// pagination
-let pageSizeInput = $("input[name=page-size]")
-let pagePreviousBtn = $(".page-previous")
-let pageNumArea = $(".page-num-area")
-let pageNextBtn = $(".page-next")
-let pageNumTipArea = $(".page-num-tip-area")
-
 // query param
-let currentPage = 1
-let orderCol = "id"
 let ascendingOrder = true
 
 // other
-let pageNums = 0
 let monitorListData = []
 let deleteMonitors = []
 
@@ -39,8 +30,8 @@ function refreshTable(successCallback, errorCallback) {
         traditional: true,
         data: {
             currentPage: currentPage,
-            pageSize: pageSizeInput.val(),
-            orderCol: orderCol,
+            pageSize: pageSize,
+            orderCol: orderCol.val(),
             ascendingOrder: ascendingOrder,
             filter: JSON.stringify(getFilterData()),
         },
@@ -94,61 +85,6 @@ function setTableBodyHTML() {
             "</td>" +
             " </tr>"
         )
-    }
-}
-
-// 绘制分页栏
-function setPaginationHTML() {
-    let s, e
-    if (pageNums <= 7 || currentPage <= 4) {
-        s = 1
-        e = pageNums
-    } else if (currentPage + 3 >= pageNums) {
-        s = pageNums - 6
-        e = pageNums
-    } else {
-        s = currentPage - 3
-        e = currentPage + 3
-    }
-    // 绘制分页栏
-    if (monitorListData.length === 0) {
-        $("#pagination").addClass("visually-hidden")
-    } else {
-        $("#pagination").removeClass("visually-hidden")
-        if (pageNums === 1) {
-            $(".multi-page").addClass("visually-hidden")
-            pageNumTipArea.addClass("ms-auto")
-            pageNumTipArea.html('共 1 页')
-        } else {
-            pageNumArea.html("")
-            for (let i = s; i <= e; i++) {
-                pageNumArea.append(
-                    "<button type='button' class='page-num btn btn-xs " +
-                    "btn" + (i === currentPage ? "" : "-outline") + "-primary ms-1 border'>" +
-                    i +
-                    "</button>"
-                )
-            }
-            $(".multi-page").removeClass("visually-hidden")
-            pageNumTipArea.html(
-                '共 ' + pageNums + ' 页，跳至' +
-                '<label class="mx-1 mb-0">' +
-                "<input class='pagination-input rounded form-control form-control-sm' type='text' name='num'>" +
-                '</label>' +
-                '页'
-            )
-            if (currentPage === 1) {
-                pagePreviousBtn.addClass("disabled")
-            } else {
-                pagePreviousBtn.removeClass("disabled")
-            }
-
-            if (currentPage === pageNums) {
-                pageNextBtn.addClass("disabled")
-            } else {
-                pageNextBtn.removeClass("disabled")
-            }
-        }
     }
 }
 
@@ -298,10 +234,6 @@ monitorsList.on("click", ".helmet-detect-switch", function () {
     changeDetect([id], detect)
 })
 
-pageSizeInput.keyup(function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
 pageSizeInput.keydown(function (e) {
     if (e.keyCode === 13) {
         // 输入回车
@@ -309,30 +241,7 @@ pageSizeInput.keydown(function (e) {
     }
 })
 
-pagePreviousBtn.click(function () {
-    if (!isDisabled($(this))) {
-        currentPage -= 1
-        refreshTable()
-    }
-})
-
-pageNumArea.on("click", ".page-num", function () {
-    currentPage = $(this).html()
-    refreshTable()
-})
-
-pageNextBtn.click(function () {
-    if (!isDisabled($(this))) {
-        currentPage++
-        refreshTable()
-    }
-})
-
-pageNumTipArea.on("keyup", "input[name=num]", function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
-pageNumTipArea.on("keydown", "input[name=num]", function (e) {
+pageNumTipArea.on("keydown", "input[name=page-num]", function (e) {
     if (e.keyCode === 13) {
         // 输入回车
         currentPage = this.value
@@ -480,8 +389,7 @@ filterList.on("click", ".btn.remove", function () {
     }
 })
 
-$("select[name=orderCol]").change(function () {
-    orderCol = $(this).val()
+orderCol.change(function () {
     refreshTable()
 })
 
@@ -532,5 +440,21 @@ $("button.delete-confirm").click(function () {
             customAlert("danger", "请求失败！")
         }
     })
+})
+
+pagePreviousBtn.click(function () {
+    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
+        refreshTable()
+    }
+})
+
+pageNumArea.on("click", ".page-num", function () {
+    refreshTable()
+})
+
+pageNextBtn.click(function () {
+    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
+        refreshTable()
+    }
 })
 

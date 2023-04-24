@@ -10,9 +10,7 @@
         <div class="sidebar-menu">
             <div class="sidebar-header">
                 <div class="logo">
-                    <a href="#">
-                        <img src="{% static 'assets/images/icon/logo.png' %}" alt="logo">
-                    </a>
+                    <a href="{% url 'overview' %}" class="fw-bold h5 text-white">安全帽检测系统</a>
                 </div>
             </div>
             <div class="main-menu">
@@ -39,9 +37,9 @@
                                     <i class="ti-control-backward"></i><span>录像回放</span>
                                 </a>
                             </li>
-                            <li class="{% block detect-statistics %}{% endblock %}">
-                                <a href="javascript:void(0)">
-                                    <i class="fa fa-table"></i><span>识别统计</span>
+                            <li class="{% block detect-list %}{% endblock %}">
+                                <a href="{% url 'detect:results' %}">
+                                    <i class="fa fa-table"></i><span>识别结果</span>
                                 </a>
                             </li>
                         </ul>

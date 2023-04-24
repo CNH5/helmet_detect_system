@@ -37,10 +37,9 @@ function resetEdit() {
 
 function queryData() {
     let data = {
-        monitor: monitorId,
         currentPage: currentPage,
         pageSize: pageSize,
-        ascendingOrder: ascendingOrder,
+        asc: ascendingOrder,
         col: detectTypeSelect.val()
     }
     if (startTimeInput[0].value !== "") {
@@ -131,6 +130,7 @@ function requestDeleteResult(idList) {
             getResultsData()
         },
         error: function (e) {
+            console.log(e)
             customAlert("danger", "操作失败!", e)
         }
     })
@@ -289,7 +289,7 @@ resultList.on("click", "i.ti-trash", function () {
 
 deleteCheckedBtn.click(function () {
     $("#delete-checked-confirm-modal").find(".modal-body").html(
-        "确定要删除选中的" + getCheckedResultsId().length + "个检测结果吗？"
+        "确定要删除选中的" + getCheckedResultsId().length + "条检测结果吗？"
     )
 })
 

@@ -59,16 +59,6 @@ thead {
     margin-bottom: 0;
 }
 
-.page-previous.disabled, .page-next.disabled {
-    background: #e9ecef;
-    border-color: #dee2e6;
-    color: black;
-}
-
-.pagination-input {
-    width: 50px;
-}
-
 @media (min-width: 992px) {
     .modal-md {
         --bs-modal-width: 700px

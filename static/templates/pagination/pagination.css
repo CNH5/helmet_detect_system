@@ -1,0 +1,9 @@
+.page-previous.disabled, .page-next.disabled {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: black;
+}
+
+.pagination-input {
+    width: 50px;
+}

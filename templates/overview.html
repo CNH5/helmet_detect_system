@@ -1,7 +1,7 @@
 {% extends 'base-home.html' %}
 
 {% block title %}
-    <title>安全帽佩戴检测软件</title>
+    <title>安全帽佩戴检测</title>
 {% endblock %}
 
 {% block style %}
@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block page-title %}
-
+    总览
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -22,10 +22,157 @@
 {% endblock %}
 
 {% block main-content %}
-
+    <div class="main-content-inner py-3">
+        <div class="row gx-3">
+            <div class="col-6">
+                <div class="statistics-item p-2 card shadow-sm">
+                    <div id="monitor-datas" class="card-body p-1">
+                        <div>
+                            监控总数：{{ monitor_data.count }}
+                        </div>
+                        <div>
+                            开启检测：{{ monitor_data.open_detect }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="statistics-item p-2 card shadow-sm">
+                    <div class="d-flex px-1">
+                        <h5 class="fw-bold text-secondary">检测统计</h5>
+                        <label class="ms-auto mb-0">
+                            <select class="form-select form-select-sm" name="range">
+                                <option value="24h">24小时内</option>
+                                <option value="week" selected>一周内</option>
+                                <option value="month">一个月内</option>
+                                <option value="all">全部</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="detect-statistics-pie" class="card-body p-1"></div>
+                </div>
+            </div>
+            <div class="col-6 mt-3">
+                <div class="statistics-item p-2 card shadow-sm">
+                    <div id="week-statistics-bar" class="card-body p-1"></div>
+                </div>
+            </div>
+            <div class="col-6 mt-3">
+                <div class="statistics-item p-2 card shadow-sm overflow-hidden">
+                    <h5 class="fw-bold text-secondary px-1 mt-2">警告项列表</h5>
+                    <div id="detect-actions" class="card-body p-1">
+                        <table class="w-100">
+                            <thead style="background-color: #1089A3;height: 30px">
+                            <tr class="text-white text-center">
+                                <th>监控ID</th>
+                                <th style="width: 30%">监控名</th>
+                                <th>检测图像</th>
+                                <th>检测时间</th>
+                            </tr>
+                            </thead>
+                            <tbody id="warning-list">
+                            <tr class="align-middle text-center warning-item">
+                                <td>2</td>
+                                <td>监控</td>
+                                <td><img class="warning-img bg-black"></td>
+                                <td>2023年04月21日 20:51:38</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block script %}
     {{ block.super }}
+    <script src="{% static 'assets/js/echarts.min.js' %}"></script>
+    <script>
+        let getDetectStatisticsURL = "{% url 'detect:statistics' %}"
+
+        let weekStatisticsBar = echarts.init($("#week-statistics-bar")[0])
+        let detectStatisticsPie = echarts.init($("#detect-statistics-pie")[0])
+
+        weekStatisticsBar.setOption({
+            title: {
+                text: "近7天的检测统计",
+                textStyle: {
+                    color: "#6C757D",
+                }
+            },
+            legend: {
+                data: ["佩戴安全帽", "未戴安全帽", "人"],
+                x: "right",
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    return `${params.name}<br/>${params.marker}${params.seriesName}:${params.data}`
+                }
+            },
+            xAxis: {
+                data:{{ detect_data_week.dates|safe }},
+                axisLabel: {
+                    rotate: -30,
+                }
+            },
+            yAxis: {},
+            series: [{
+                type: "bar",
+                name: "佩戴安全帽",
+                data:{{ detect_data_week.head_with_helmets }},
+            }, {
+                type: "bar",
+                name: "未戴安全帽",
+                data:{{ detect_data_week.head_without_helmets }}
+            }, {
+                type: "bar",
+                name: "人",
+                data:{{ detect_data_week.persons }},
+            },],
+            emphasis: {
+                itemStyle: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        })
+        detectStatisticsPie.setOption({
+            legend: {
+                orient: 'vertical',
+                left: 'left'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    let data = params.data
+                    return `${params.marker}${data.name}: ${data.value} (${params.percent}%)`
+                }
+            },
+            series: [
+                {
+                    type: 'pie',
+                    radius: '50%',
+                    data: [],
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        })
+
+        window.addEventListener('resize', function () {
+            weekStatisticsBar.resize()
+            detectStatisticsPie.resize()
+        });
+    </script>
     <script src="{% static 'overview/overview.js' %}"></script>
 {% endblock %}

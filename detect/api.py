@@ -1,7 +1,9 @@
+import datetime
+
 import zmq
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
@@ -36,30 +38,31 @@ def unhandled_warning_num(_):
 
 
 @require_GET
-def query_detect_record(request):
-    q = None
-    if monitor_id := request.GET.get("monitor"):
-        q = Q(monitor_id=monitor_id)
+def query_monitor_results(request, monitor_id: int):
+    dq = Q(monitor_id=monitor_id)
     if st := request.GET.get("st"):
-        q1 = Q(detect_time__gte=st)
-        q = (q & q1) if q else q1
+        dq &= Q(detect_time__gte=st)
     if et := request.GET.get("et"):
-        q1 = Q(detect_time__lte=et)
-        q = (q & q1) if q else q1
+        dq &= Q(detect_time__lte=et)
     if (col := request.GET.get("col")) in ["person", "head_without_helmet", "head_with_helmet"]:
-        q1 = Q(**{col + "__gt": 0})
-        q = (q & q1) if q else q1
+        dq &= Q(**{col + "__gt": 0})
+    order = ("-" if request.GET.get("asc") in ["True", "true", 1, "1", True] else "") + "id"
 
-    if request.GET.get("ascendingOrder") in ["True", "true", 1, "1", True]:
-        order = "-detect_time"
-    else:
-        order = "detect_time"
-
-    if q:
-        # 很奇怪，all()和filter()不能拆开用...
-        result_list = Result.objects.all().filter(q).order_by(order)
-    else:
-        result_list = Result.objects.all().order_by(order)
+    result_list = (
+        Result.objects.all().filter(dq)
+        .extra(
+            select={'detect_time': "strftime('%%Y年%%m月%%d日 %%H:%%M:%%S', detect_time)"}
+        )
+        .values(
+            "id",
+            "person",
+            "head_with_helmet",
+            "head_without_helmet",
+            "detect_time",
+            "img"
+        )
+        .order_by(order)
+    )
 
     current_page = request.GET.get("currentPage", 1)
     paginator = Paginator(result_list, request.GET.get("pageSize", 10))
@@ -73,7 +76,52 @@ def query_detect_record(request):
         result_list = paginator.page(current_page)
 
     return JsonResponse({
-        "resultList": [result.to_json() for result in result_list],
+        "resultList": list(result_list),
+        "currentPage": int(current_page),
+        "pageNums": paginator.num_pages,
+    })
+
+
+def query_results(request):
+    dq = Q(id__gt=0)
+    if st := request.GET.get("st"):
+        dq &= Q(detect_time__gte=st)
+    if et := request.GET.get("et"):
+        dq &= Q(detect_time__lte=et)
+    if (col := request.GET.get("col")) in ["person", "head_without_helmet", "head_with_helmet"]:
+        dq &= Q(**{col + "__gt": 0})
+    order = ("-" if request.GET.get("asc") in ["True", "true", 1, "1", True] else "") + "id"
+
+    result_list = (
+        Result.objects.all().filter(dq)
+        .extra(
+            select={'detect_time': "strftime('%%Y年%%m月%%d日 %%H:%%M:%%S', detect_time)"}
+        )
+        .values(
+            "id",
+            "monitor_id",
+            "person",
+            "head_with_helmet",
+            "head_without_helmet",
+            "detect_time",
+            "img"
+        )
+        .annotate(monitor_name=F("monitor__name"))
+        .order_by(order)
+    )
+    current_page = request.GET.get("currentPage", 1)
+    paginator = Paginator(result_list, request.GET.get("pageSize", 10))
+    try:
+        result_list = paginator.page(current_page)
+    except PageNotAnInteger:
+        current_page = 1
+        result_list = paginator.page(current_page)
+    except EmptyPage:
+        current_page = paginator.num_pages
+        result_list = paginator.page(current_page)
+
+    return JsonResponse({
+        "resultsList": list(result_list),
         "currentPage": int(current_page),
         "pageNums": paginator.num_pages,
     })
@@ -102,3 +150,25 @@ def detection_switch_modification(request):
             else:
                 detect_pool.remove_thread(m.pk)
     return JsonResponse({"msg": f"修改了 {n} 条数据"})
+
+
+@require_GET
+def statistics(request):
+    r = request.GET.get("range")
+    if r == "24h":
+        day = datetime.date.today() - datetime.timedelta(days=1)
+        qs = Result.objects.all().filter(detect_time__gt=day)
+    elif r == "month":
+        day = datetime.date.today() - datetime.timedelta(days=30)
+        qs = Result.objects.all().filter(detect_time__gt=day)
+    elif r == "all":
+        qs = Result.objects.all()
+    else:
+        # 默认一周
+        day = datetime.date.today() - datetime.timedelta(days=7)
+        qs = Result.objects.all().filter(detect_time__gt=day)
+    return JsonResponse({
+        "persons": qs.aggregate(ps=Sum("person"))["ps"] or 0,
+        "head_with_helmets": qs.aggregate(hwo=Sum('head_with_helmet'))["hwo"] or 0,
+        "head_without_helmets": qs.aggregate(hw=Sum('head_without_helmet'))["hw"] or 0,
+    })

@@ -6,6 +6,7 @@
 
 {% block style %}
     {{ block.super }}
+    <link rel="stylesheet" href="{% static 'templates/pagination/pagination.css' %}">
     <link href="{% static "monitor/manage/manage.css" %}" rel="stylesheet">
 {% endblock %}
 
@@ -237,5 +238,6 @@
         let existsSourceTestURL = "{% url 'monitor:source-test' 0 %}"
         let csrfToken = "{{ csrf_token }}"
     </script>
+    <script src="{% static 'templates/pagination/pagination.js' %}"></script>
     <script src="{% static "monitor/manage/manage.js" %}"></script>
 {% endblock %}

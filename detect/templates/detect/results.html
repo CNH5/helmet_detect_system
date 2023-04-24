@@ -1,0 +1,156 @@
+{% extends 'base-home.html' %}
+
+{% block title %}
+    <title>检测结果列表</title>
+{% endblock %}
+
+{% block style %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "assets/css/jquery.fancybox.min.css" %}">
+    <link rel="stylesheet" href="{% static 'templates/pagination/pagination.css' %}">
+    <link rel="stylesheet" href="{% static 'detect/results/results.css' %}">
+{% endblock %}
+
+{% block detect-list %}
+    active
+{% endblock %}
+
+{% block page-title %}
+    识别结果列表
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block main-content %}
+    <div class="main-content-inner py-3">
+        <div class="card">
+            <div class="card-body py-3">
+                <!-- table options start -->
+                <div class="d-flex w-100">
+                    <div class="d-flex me-auto">
+                        <label class="mb-0">
+                            <select class="form-select form-select-sm" name="col">
+                                <option value="" selected>全部</option>
+                                <option value="person">人</option>
+                                <option value="head_with_helmet">佩戴安全帽</option>
+                                <option value="head_without_helmet">未戴安全帽</option>
+                            </select>
+                        </label>
+                        <div class="d-flex h-100 ms-2">
+                            <span class="my-auto">开始时间：</span>
+                        </div>
+                        <label class="mb-0">
+                            <input type="datetime-local" class="form-control form-control-sm" name="start-time">
+                        </label>
+                        <div class="d-flex h-100 ms-2">
+                            <span class="my-auto">结束时间：</span>
+                        </div>
+                        <label class="mb-0">
+                            <input type="datetime-local" class="form-control form-control-sm" name="end-time">
+                        </label>
+                        <label class="mb-0 ms-2">
+                            <select class="form-select form-select-sm" name="asc">
+                                <option value="true">降序</option>
+                                <option value="false">升序</option>
+                            </select>
+                        </label>
+                        <button type="button" class="clean-filter btn btn-xs btn-outline-primary ms-2">
+                            清除筛选
+                        </button>
+                    </div>
+                    <div class="d-flex ms-auto">
+                        <button type="button" class="refresh btn btn-primary btn-xs h-100 mx-2">
+                            <span class="ti-reload"></span>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-outline-danger delete-selected"
+                                disabled data-bs-toggle="modal" data-bs-target="#delete-confirm-modal">
+                            删除选中
+                        </button>
+                    </div>
+                </div>
+                <!-- table options end -->
+                <!-- table content start -->
+                <table class="table mt-3">
+                    <thead style="background-color: #1089a3">
+                    <tr class="text-white text-center">
+                        <th style="width: 8%" scope="col" class="text-start">
+                            <label class="mt-1 mb-0">
+                                <input type="checkbox" name="all-check">
+                                <span class="text-white fw-bold">ID</span>
+                            </label>
+                        </th>
+                        <th style="width: 8%" scope="col">监控ID</th>
+                        <th style="width: 20%" scope="col">监控名</th>
+                        <th style="width: 18%" scope="col">检测日期</th>
+                        <th style="width: 8%" scope="col">未戴安全帽</th>
+                        <th style="width: 8%" scope="col">人</th>
+                        <th style="width: 8%" scope="col">佩戴安全帽</th>
+                        <th scope="col">图像</th>
+                        <th style="width: 8%" class="text-center" scope="col">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody class="results-list text-center"></tbody>
+                </table>
+                <!-- table content end -->
+                <!-- pagination start -->
+                <div id="pagination" class="mb-3 mt-4 d-flex visually-hidden">
+                    <div class="my-auto pull-left ms-2">
+                        每页
+                        <label class="mx-1 mb-0">
+                            <input class="pagination-input form-control form-control-sm"
+                                   type="text" name="page-size" value="10">
+                        </label>
+                        条数据
+                    </div>
+                    <div class="multi-page d-flex mx-auto">
+                        <div class="my-auto">
+                            <a href="javascript:" class="page-previous btn btn-xs btn-outline-primary border">
+                                上一页
+                            </a>
+                        </div>
+                        <div class="my-auto d-flex page-num-area"></div>
+                        <div class="my-auto me-auto ms-1">
+                            <a href="javascript:" class="page-next btn btn-xs btn-outline-primary border">
+                                下一页
+                            </a>
+                        </div>
+                    </div>
+                    <div class="my-auto pull-right page-num-tip-area me-3"></div>
+                </div>
+                <!-- pagination end -->
+            </div>
+        </div>
+    </div>
+    <!-- delete confirm modal start -->
+    <div id="delete-confirm-modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5"><i class="fa fa-exclamation-triangle me-2"></i>请确认您的操作</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-sm delete-confirm" data-bs-dismiss="modal">
+                        确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- delete confirm modal end -->
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+    <script src="{% static 'assets/js/jquery.fancybox.min.js' %}"></script>
+    <script>
+        let resultsQueryURL = "{% url 'detect:results-query' %}"
+        let deleteResultsURL = "{% url 'detect:results-delete' %}"
+        let csrfToken = "{{ csrf_token }}"
+        let mediaBaseURL = "{{ MEDIA_URL }}"
+    </script>
+    <script src="{% static 'templates/pagination/pagination.js' %}"></script>
+    <script src="{% static 'detect/results/results.js' %}"></script>
+{% endblock %}

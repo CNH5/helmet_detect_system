@@ -1,0 +1,8 @@
+.result-img {
+    height: 50px;
+    aspect-ratio: 16/9;
+}
+
+.clickable{
+    cursor: pointer;
+}

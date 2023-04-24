@@ -193,7 +193,7 @@
     <script src="{% static 'assets/js/jquery.fancybox.min.js' %}"></script>
     <script>
         let infoUpdateURL = "{% url 'monitor:update' monitor.id %}"
-        let resultsQueryURL = "{% url 'detect:results-query' %}"
+        let resultsQueryURL = "{% url 'detect:monitor-results' monitor.id %}"
         let deleteResultsURL = "{% url 'detect:results-delete' %}"
         let switchModificationURL = "{% url 'detect:switch-modification' %}"
         let monitorId = "{{ monitor.id }}"
