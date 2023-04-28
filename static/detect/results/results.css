@@ -3,6 +3,10 @@
     aspect-ratio: 16/9;
 }
 
-.clickable{
+.clickable {
     cursor: pointer;
+}
+
+.tips {
+    height: 300px;
 }

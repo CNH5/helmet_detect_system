@@ -27,10 +27,11 @@ function setPaginationHTML(noneData) {
     } else {
         $("#pagination").removeClass("visually-hidden")
         if (pageNums === 1) {
-            pageNumArea.addClass("visually-hidden")
+            $(".multi-page").addClass("visually-hidden")
             pageNumTipArea.addClass("ms-auto")
             pageNumTipArea.html('共 1 页')
         } else {
+            $(".multi-page").removeClass("visually-hidden")
             pageNumArea.html("")
             for (let i = s; i <= e; i++) {
                 pageNumArea.append(

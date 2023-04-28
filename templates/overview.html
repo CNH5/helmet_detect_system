@@ -92,9 +92,12 @@
     <script src="{% static 'assets/js/echarts.min.js' %}"></script>
     <script>
         let getDetectStatisticsURL = "{% url 'detect:statistics' %}"
+        let resultsPageURL = "{% url 'detect:results' %}"
+        let monitorListURL = "{% url 'monitor:manage' %}"
 
         let weekStatisticsBar = echarts.init($("#week-statistics-bar")[0])
         let detectStatisticsPie = echarts.init($("#detect-statistics-pie")[0])
+        let monitorDataPie = echarts.init($("#monitor-datas")[0])
 
         weekStatisticsBar.setOption({
             title: {
@@ -156,7 +159,7 @@
             series: [
                 {
                     type: 'pie',
-                    radius: '50%',
+                    radius: '72%',
                     data: [],
                     emphasis: {
                         itemStyle: {
@@ -165,6 +168,50 @@
                             shadowColor: 'rgba(0, 0, 0, 0.5)'
                         }
                     }
+                }
+            ]
+        })
+        monitorDataPie.setOption({
+            title: {
+                text: "监控总数：{{ monitor_data.count }}",
+                textStyle: {
+                    color: "#6C757D",
+                }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    let data = params.data
+                    return `${params.marker}${data.name}: ${data.value} (${params.percent}%)`
+                }
+            },
+            series: [
+                {
+                    type: 'pie',
+                    radius: ['37%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                        }
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    data: [
+                        {
+                            name: '开启安全帽检测',
+                            value: {{ monitor_data.open_detect }},
+                        }, {
+                            name: '关闭安全帽检测',
+                            value: {{ monitor_data.count }}-{{ monitor_data.open_detect }},
+                        },
+                    ]
                 }
             ]
         })

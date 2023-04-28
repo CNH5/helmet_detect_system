@@ -2,6 +2,7 @@ let rangeSelect = $("select[name=range]")
 
 let currentPage = 1
 let pageSize = 5
+let types = ["head_with_helmet", "head_without_helmet", "person"]
 
 function getStatisticsData() {
     $.ajax({
@@ -49,9 +50,13 @@ rangeSelect.change(function () {
 })
 
 weekStatisticsBar.on("click", function (params) {
-    console.log(params)
+    window.location = resultsPageURL + "?type=" + types[params.seriesIndex] + "&day=" + params.name + "T00:00:00"
 })
 
 detectStatisticsPie.on("click", function (params) {
+    window.location = resultsPageURL + "?type=" + types[params.dataIndex] + "&range=" + rangeSelect.val()
+})
 
+monitorDataPie.on("click", function (params) {
+    window.location = monitorListURL + "?detect=" + (params.dataIndex === 1)
 })

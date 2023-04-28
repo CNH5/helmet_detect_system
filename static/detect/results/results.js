@@ -1,4 +1,5 @@
 let resultsList = $(".results-list")
+let allCheckBox = $("input[name=all-check]")
 
 let resultsListData = []
 let deleteId
@@ -49,6 +50,33 @@ function getCheckedResultsId() {
     return idList
 }
 
+function clearChecked() {
+    allCheckBox.prop("checked", false)
+    $("button.delete-selected").prop("disabled", true)
+    if (resultsListData.length === 0) {
+        allCheckBox.addClass("disabled")
+    } else {
+        allCheckBox.removeClass("disabled")
+    }
+}
+
+function hasFilter() {
+    return $("select[name=col]").val() !== "" || $("input[name=start-time]").val() !== "" || $("input[name=end-time]").val() !== ""
+}
+
+function setTips() {
+    if (resultsListData.length === 0) {
+        if (hasFilter()) {
+            $(".tips.filter-none").removeClass("visually-hidden")
+        } else {
+            $(".tips.none-results").removeClass("visually-hidden")
+        }
+    } else {
+        $(".tips.filter-none").addClass("visually-hidden")
+        $(".tips.none-results").addClass("visually-hidden")
+    }
+}
+
 function getResultsData(successCallback, errorCallback) {
     $.ajax({
         method: "GET",
@@ -66,6 +94,8 @@ function getResultsData(successCallback, errorCallback) {
             pageNums = data["pageNums"]
             resultsListData = data["resultsList"]
             showResultsData()
+            setTips()
+            clearChecked()
             setPaginationHTML(resultsListData.length === 0)
             if (successCallback) {
                 successCallback()
@@ -80,7 +110,58 @@ function getResultsData(successCallback, errorCallback) {
     })
 }
 
+function zeroPadded(val) {
+    return (val >= 10 ? "" : "0") + val
+}
+
+function formatDate(date) {
+    return date.getFullYear() + "-" + zeroPadded(date.getMonth() + 1) + "-" + zeroPadded(date.getDate()) + " " +
+        zeroPadded(date.getHours()) + ":" + zeroPadded(date.getMinutes()) + ":" + zeroPadded(date.getSeconds())
+}
+
+function loadUrlData() {
+    let params = {}
+    let p = window.location.href.split("?")
+    if (p.length > 1) {
+        p = p[1].split("&")
+        for (let i = 0; i < p.length; i++) {
+            let pi = p[i].split("=")
+            if (pi.length === 2) {
+                params[pi[0]] = pi[1]
+            }
+        }
+        if (params.day) {
+            let d = new Date(params.day.replace("T", " "))
+            $("input[name=start-time]").prop("value", formatDate(d))
+            d.setDate(d.getDate() + 1)
+            $("input[name=end-time]").prop("value", formatDate(d))
+        } else if (params.range) {
+            let d = new Date()
+            let startDayInput = $("input[name=start-time]")
+            switch (params.range) {
+                case "24h":
+                    d.setDate(d.getDate() - 1)
+                    startDayInput.prop("value", formatDate(d))
+                    break
+                case "week":
+                    d.setDate(d.getDate() - 7)
+                    startDayInput.prop("value", formatDate(d))
+                    break
+                case "month":
+                    d.setMonth(d.getMonth() - 1)
+                    startDayInput.prop("value", formatDate(d))
+                    break
+                default:
+            }
+        }
+        if (params.type) {
+            $("select[name=col]").prop("value", params.type)
+        }
+    }
+}
+
 $(() => {
+    loadUrlData()
     getResultsData()
 })
 
@@ -107,7 +188,7 @@ resultsList.on("click", "input[name=chk]", function () {
     $(".btn.delete-selected").prop("disabled", checkedNums === 0)
 })
 
-$("input[name=all-check]").click(function () {
+allCheckBox.click(function () {
     let checked = this.checked
     resultsList.find("input[name=chk]").each(function () {
         $(this).prop("checked", checked)

@@ -379,6 +379,7 @@ filterList.on("change", "select[name=col]", function () {
     } else if (val === "detect") {
         operationNode.html("<option value='' selected>=</option>")
         operationNode.prop("disabled", true)
+        // TODO: 需要将valueNode改为select
     }
     $(this).data('pre', val);
 })
