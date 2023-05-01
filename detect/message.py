@@ -29,8 +29,9 @@ def publish_warning():
         try:
             data = _warning_pull.recv_json(zmq.NOBLOCK)
             if len(SUB_POOL) > 0:
-                # 有用户，广播警报
-                _warning_pub.send_json(data)
+                if data["head_without_helmet"] > 0:
+                    # 有用户，识别到未佩戴安全帽，广播警报
+                    _warning_pub.send_json(data)
             else:
                 # 没有用户，更新缓存信息条数
                 MonitorInfo.objects.filter(pk=data["id"]).update(message_count=F("message_count") + 1)
