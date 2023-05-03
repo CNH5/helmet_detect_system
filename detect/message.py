@@ -5,7 +5,7 @@ import threading
 from django.contrib.sessions.models import Session
 from django.db.models import F
 
-from monitor.models import Info as MonitorInfo
+from monitor.models import MonitorInfo
 from helmet_detect_system import settings
 
 content = zmq.Context()
@@ -34,7 +34,7 @@ def publish_warning():
                     _warning_pub.send_json(data)
             else:
                 # 没有用户，更新缓存信息条数
-                MonitorInfo.objects.filter(pk=data["id"]).update(message_count=F("message_count") + 1)
+                MonitorInfo.objects.filter(id=data["monitor_id"]).update(message_count=F("message_count") + 1)
         except zmq.ZMQError:
             time.sleep(settings.PUBLISH_INTERVAL)
 

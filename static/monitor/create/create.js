@@ -41,7 +41,7 @@ monitorCreateForm.submit(function (event) {
                 name: $("input[name=name]").val(),
                 source: $("textarea[name=source]").val(),
                 detect: $("select[name=helmet-detect]").val(),
-                csrfmiddlewaretoken: csrfToken,
+                csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
             }, success: function (data) {
                 console.log(data)
                 switch (data["code"]) {

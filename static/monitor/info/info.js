@@ -123,7 +123,7 @@ function requestDeleteResult(idList) {
         url: deleteResultsURL,
         data: {
             idList: idList,
-            csrfmiddlewaretoken: csrfToken,
+            csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
         },
         success: function (data) {
             customAlert("success", "操作成功!", data["msg"])
@@ -203,7 +203,7 @@ infoForm.submit(function (event) {
             data: {
                 name: newName,
                 source: newSource,
-                csrfmiddlewaretoken: csrfToken,
+                csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
             },
             success: function (data) {
                 if (data["code"] === 403) {
@@ -350,7 +350,7 @@ $("input[name=detect]").click(function () {
         data: {
             idList: [monitorId],
             detect: that.checked,
-            csrfmiddlewaretoken: csrfToken,
+            csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
         },
         success: function (data) {
             customAlert(

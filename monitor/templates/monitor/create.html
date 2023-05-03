@@ -54,6 +54,7 @@
                         <button type="reset" class="btn btn-secondary btn-sm ms-auto">清空</button>
                         <button type="submit" class="btn btn-primary btn-sm ms-3">提交</button>
                     </div>
+                    {% csrf_token %}
                 </form>
                 <!-- monitor create form end -->
                 <!-- source review area start -->
@@ -74,7 +75,6 @@
         let monitorInsertURL = "{% url 'monitor:insert' %}"
         let newSourceTestURL = "{% url 'monitor:new-source-test' %}"
         let reviewSourceURL = "{% url 'monitor:new-source-review' %}"
-        let csrfToken = "{{ csrf_token }}"
     </script>
     <script src="{% static 'monitor/create/create.js' %}"></script>
 {% endblock %}

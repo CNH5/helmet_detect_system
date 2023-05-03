@@ -7,7 +7,7 @@ import zmq
 from django.core.files.base import ContentFile
 
 from helmet_detect_system import settings
-from monitor.models import Info as MonitorInfo
+from monitor.models import MonitorInfo
 from .models import Result
 from .yolo import ModelYOLOv8, PERSON, HEAD_WITH_HELMET, HEAD_WITHOUT_HELMET
 from .message import PULL_PORT
@@ -76,12 +76,13 @@ def _generate_detected_frame(monitor: MonitorInfo):
                 ContentFile(frame),
                 save=True
             )
-        warning_push.send_json({
-            "id": monitor.id,
-            "person": _values.now_person,
-            "head_with_helmet": _values.now_head_with_helmet,
-            "head_without_helmet": _values.now_head_without_helmet,
-        })
+
+            warning_push.send_json({
+                "monitor_id": monitor.id,
+                "person": _values.now_person,
+                "head_with_helmet": _values.now_head_with_helmet,
+                "head_without_helmet": _values.now_head_without_helmet,
+            })
 
 
 def start():

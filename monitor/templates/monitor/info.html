@@ -60,11 +60,12 @@
                         </div>
                         <div class="form-check form-switch">
                             <label class="form-check-label">
-                                安全帽检测
+                                安全帽佩戴检测
                                 <input class="form-check-input" type="checkbox" role="switch"
                                        name="detect" {% if monitor.helmet_detect %}checked{% endif %}>
                             </label>
                         </div>
+                        {% csrf_token %}
                     </form>
                 </div>
             </div>
@@ -199,7 +200,6 @@
         let monitorId = "{{ monitor.id }}"
         let originMonitorName = "{{ monitor.name }}"
         let originMonitorSource = "{{ monitor.source }}"
-        let csrfToken = "{{ csrf_token }}"
         let mediaBaseURL = "{{ MEDIA_URL }}"
     </script>
     <script src="{% static 'monitor/info/info.js' %}"></script>

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from detect import statistics as detect_statistics
-from monitor.models import Info as MonitorInfo
+from monitor.models import MonitorInfo
 
 
 def overview(request):

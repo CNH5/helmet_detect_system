@@ -7,7 +7,7 @@ from django.db.models import Sum, Q, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from monitor.models import Info as MonitorInfo
+from monitor.models import MonitorInfo
 from .message import SUB_POOL
 from .models import Result
 from . import detect_pool
@@ -22,7 +22,7 @@ def warning_listen(request):
         while True:
             try:
                 data = sub.recv_json(zmq.NOBLOCK)
-                warning_monitor.append(data["id"])
+                warning_monitor.append(data["monitor_id"])
             except zmq.ZMQError:
                 # 收不到警报了
                 break

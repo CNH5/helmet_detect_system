@@ -16,7 +16,7 @@ from detect import detect_pool
 from . import utils
 from .forms import *
 
-from .models import Info as MonitorInfo
+from .models import MonitorInfo
 from .validators import INTEGER_PATTERN
 
 

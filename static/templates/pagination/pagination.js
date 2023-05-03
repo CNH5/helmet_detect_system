@@ -13,7 +13,7 @@ function setPaginationHTML(noneData) {
     let s, e
     if (pageNums <= 7 || currentPage <= 4) {
         s = 1
-        e = pageNums
+        e = Math.min(pageNums, 7)
     } else if (currentPage + 3 >= pageNums) {
         s = pageNums - 6
         e = pageNums

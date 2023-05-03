@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Info as MonitorInfo
+from .models import MonitorInfo
 from django.core.paginator import Paginator
 
 
