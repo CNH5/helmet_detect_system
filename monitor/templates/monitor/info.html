@@ -7,6 +7,7 @@
 {% block style %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static "assets/css/jquery.fancybox.min.css" %}">
+    <link rel="stylesheet" href="{% static "templates/pagination/pagination.css" %}">
     <link rel="stylesheet" href="{% static "monitor/info/info.css" %}">
 {% endblock %}
 
@@ -116,7 +117,7 @@
                         <button type="button" class="btn btn-outline-primary btn-xs refresh-btn">
                             <i class="fa fa-refresh"></i>
                         </button>
-                        <button type="button" class="btn btn-xs btn-danger delete-checked-btn"
+                        <button type="button" class="btn btn-xs btn-danger delete-checked"
                                 data-bs-toggle="modal" data-bs-target="#delete-checked-confirm-modal" disabled>
                             删除选中
                         </button>
@@ -144,7 +145,7 @@
                 </table>
                 <div class="result-tip-area d-flex justify-content-center align-items-center"></div>
                 <!-- table end -->
-                <div class="pagination-area d-flex mt-4"></div>
+                <div id="pagination" class="d-flex mt-4"></div>
             </div>
         </div>
         <!-- detect result table end -->
@@ -202,5 +203,6 @@
         let originMonitorSource = "{{ monitor.source }}"
         let mediaBaseURL = "{{ MEDIA_URL }}"
     </script>
+    <script src="{% static 'templates/pagination/pagination.js' %}"></script>
     <script src="{% static 'monitor/info/info.js' %}"></script>
 {% endblock %}

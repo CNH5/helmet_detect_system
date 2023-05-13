@@ -6,6 +6,7 @@
 
 {% block style %}
     {{ block.super }}
+    <link rel="stylesheet" href="{% static "templates/pagination/pagination.css" %}">
     <link rel="stylesheet" href="{% static "monitor/multiview/multiview.css" %}">
 {% endblock %}
 
@@ -18,30 +19,27 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    <span class="ti-layout border-start ps-3 pt-2"></span>
-    <div class="ps-3 pt-1">行数：</div>
-    <label class="mb-0 col-sm-1">
-        <input type="text" class="form-control form-control-sm" name="row" disabled>
-    </label>
-    <div class="ms-2 pt-1">列数：</div>
-    <label class="mb-0 col-sm-1">
-        <input type="text" class="form-control form-control-sm" name="col" disabled>
-    </label>
-    <button type="button" class="btn btn-xs btn-outline-primary ms-3 edit-btn">
-        <i class="fa fa-edit"></i> 修改
+    <span class="ti-layout pt-2"></span>
+    <div class="ps-3 pt-1">{{ layout.name }}</div>
+    <button type="button" class="btn btn-xs btn-outline-primary ms-3"
+            data-bs-toggle="modal" data-bs-target="#layout-update-modal">
+        修改 <i class="fa fa-edit"></i>
     </button>
-    <button type="button" class="btn btn-xs btn-primary ms-3 edit-save-btn d-none">
-        <span class="ti-save"></span> 保存
+    <button type="button" class="btn btn-xs btn-primary ms-3"
+            data-bs-toggle="modal" data-bs-target="#layout-exchange-modal">
+        切换 <i class="fa fa-exchange"></i>
     </button>
-    <button type="button" class="btn btn-xs btn-secondary ms-2 edit-cancel-btn d-none">
-        <span class="ti-close"></span> 取消
+    <button type="button" class="btn btn-xs btn-outline-secondary ms-3"
+            data-bs-toggle="modal" data-bs-target="#layout-create-modal">
+        新建 <i class="fa fa-plus"></i>
     </button>
 {% endblock %}
 
 {% block main-content %}
+    <!-- page main content start -->
     <div class="main-content-inner p-1 flex-grow-1 d-flex">
         <div class="review-grid d-grid bg-black flex-grow-1 mh-100">
-            {% for monitor in reviewMonitor %}
+            {% for monitor in monitors %}
                 <div class="border border-white">
                     {% if monitor %}
                         <div class="source-player w-100 h-100 align-middle d-flex">
@@ -90,6 +88,8 @@
             {% endfor %}
         </div>
     </div>
+    <!-- page main content end -->
+
     <!-- modal offcanvas area start -->
     <!-- monitor select modal start -->
     <div id="monitor-select-modal" class="modal modal-xl fade" data-bs-backdrop="static" aria-hidden="true">
@@ -183,30 +183,7 @@
                     </div>
                     <!-- table data none tips area end -->
                     <!-- pagination area start -->
-                    <div class="pagination-area d-flex position-relative align-items-center visually-hidden">
-                        <div class="my-auto pull-left">
-                            每页
-                            <label class="mx-1 mb-0">
-                                <input class="pagination-input form-control form-control-sm"
-                                       type="text" name="page-size">
-                            </label>
-                            条数据
-                        </div>
-                        <div class="multi-page d-flex mx-auto">
-                            <div class="my-auto me-1">
-                                <a href="javascript:" class="page-previous btn btn-xs btn-outline-primary border">
-                                    上一页
-                                </a>
-                            </div>
-                            <div class="my-auto d-flex page-num-area"></div>
-                            <div class="my-auto me-auto ms-1">
-                                <a href="javascript:" class="page-next btn btn-xs btn-outline-primary border">
-                                    下一页
-                                </a>
-                            </div>
-                        </div>
-                        <div class="my-auto pull-right page-num-tip-area"></div>
-                    </div>
+                    <div id="monitor-pagination"></div>
                     <!-- pagination area end -->
                     <!-- monitor table area end -->
                 </div>
@@ -224,6 +201,205 @@
         </div>
     </div>
     <!-- monitor select modal end -->
+    <!-- layout exchange modal start -->
+    <div id="layout-exchange-modal" class="modal modal-md fade" data-bs-backdrop="static" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">布局选择</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- layout filter area start -->
+                    <div class="d-flex my-1">
+                        <span class="my-auto text-end">布局名:</span>
+                        <label class="my-auto mx-2" style="width: 150px">
+                            <input type="text" class="form-control form-control-sm" name="layout-name">
+                        </label>
+                        <span class="my-auto text-end">行数:</span>
+                        <label class="my-auto mx-2" style="width: 75px">
+                            <input type="number" class="form-control form-control-sm" name="layout-rows">
+                        </label>
+                        <span class="my-auto text-end">列数:</span>
+                        <label class="my-auto ms-2" style="width: 75px">
+                            <input type="number" class="form-control form-control-sm" name="layout-cols">
+                        </label>
+
+                        <button class="btn btn-xs btn-secondary ms-2 layout-clean-filter">清除筛选</button>
+                        <button class="btn btn-xs btn-danger ms-auto layout-checked-delete" disabled
+                                data-bs-toggle="modal" data-bs-target="#layout-delete-confirm-modal">
+                            删除选中
+                        </button>
+                    </div>
+                    <!-- layout filter area end -->
+                    <table class="table text-center mt-2 ">
+                        <thead class="text-white" style="background-color: #17a2b8;">
+                        <tr>
+                            <th style="width: 10%" scope="col">
+                                <label class="mb-0 d-flex">
+                                    <input type="checkbox" name="layout-all-check" class="my-auto">
+                                    <span class="text-white fw-bold ms-1">ID</span>
+                                </label>
+                            </th>
+                            <th scope="col">布局名</th>
+                            <th style="width: 15%" scope="col">行数</th>
+                            <th style="width: 15%" scope="col">列数</th>
+                            <th style="width: 10%" scope="col">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody class="layout"></tbody>
+                    </table>
+                    <div class="filter-none-tips d-flex justify-content-center align-items-center visually-hidden">
+                        <div class="me-4">
+                            <p class="fs-5 text-center mb-2">筛选结果为空!</p>
+                            <p class="fs-5 text-center">请重新检查筛选条件</p>
+                        </div>
+                    </div>
+                    <div class="layout-pagination"></div>
+                </div>
+                <div class="modal-footer">
+                    <div class="me-auto">
+                        <span class="text-secondary">当前选择：</span>
+                        <mark class="selected-layout-info">无</mark>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-sm confirm-layout" disabled>确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- layout exchange modal end -->
+    <!-- layout update modal start -->
+    <div id="layout-update-modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">修改当前布局</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="layout-info" novalidate>
+                        <div class="mb-3 row">
+                            <div class="col-2 d-flex">
+                                <div class="my-auto ms-auto">布局名：</div>
+                            </div>
+                            <label class="col-10 mb-0">
+                                <input type="text" class="form-control" maxlength="20" name="name" required placeholder="1~20个字符">
+                            </label>
+
+                            <div class="invalid-feedback">
+                                <span class="fs-6">请填写布局名</span>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-2 d-flex">
+                                <div class="my-auto ms-auto">行数：</div>
+                            </div>
+                            <label class="col-10 mb-0">
+                                <input type="number" class="form-control" name="rows" required placeholder="正整数">
+                            </label>
+                            <div class="invalid-feedback">
+                                <span class="fs-6">请填写行数</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 d-flex">
+                                <div class="my-auto ms-auto">列数：</div>
+                            </div>
+                            <label class="col-10 mb-0">
+                                <input type="number" class="form-control" name="cols" required placeholder="正整数">
+                            </label>
+                            <div class="invalid-feedback">
+                                <span class="fs-6">请填写列数</span>
+                            </div>
+                        </div>
+                        {% csrf_token %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn-xs me-auto" data-bs-target="model">删除布局</button>
+                    <button type="button" class="btn btn-xs btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-xs btn-primary save-layout">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- layout update modal end -->
+    <!-- layout delete confirm modal start -->
+    <div id="layout-delete-confirm-modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <span>请确认您的操作</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-xs btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-xs btn-primary confirm-delete" data-bs-dismiss="modal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- layout delete confirm modal end -->
+        <!-- layout update modal start -->
+    <div id="layout-create-modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">新建布局</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="layout-create" novalidate>
+                        <div class="mb-3 row">
+                            <div class="col-2 d-flex">
+                                <div class="my-auto ms-auto">布局名：</div>
+                            </div>
+                            <label class="col-10 mb-0">
+                                <input type="text" class="form-control" maxlength="20" name="name" required placeholder="1~20个字符">
+                            </label>
+
+                            <div class="invalid-feedback">
+                                <span class="fs-6">请填写布局名</span>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-2 d-flex">
+                                <div class="my-auto ms-auto">行数：</div>
+                            </div>
+                            <label class="col-10 mb-0">
+                                <input type="number" class="form-control" name="rows" required placeholder="正整数">
+                            </label>
+                            <div class="invalid-feedback">
+                                <span class="fs-6">请填写行数</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 d-flex">
+                                <div class="my-auto ms-auto">列数：</div>
+                            </div>
+                            <label class="col-10 mb-0">
+                                <input type="number" class="form-control" name="cols" required placeholder="正整数">
+                            </label>
+                            <div class="invalid-feedback">
+                                <span class="fs-6">请填写列数</span>
+                            </div>
+                        </div>
+                        {% csrf_token %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-xs btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-xs btn-primary save-layout" data-bs-dismiss="modal">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- layout update modal end -->
     <!-- modal area end -->
 {% endblock %}
 
@@ -233,19 +409,19 @@
         let monitorReviewURl = '{% url 'monitor:source-review' 0 %}'
         let monitorQueryURL = "{% url 'monitor:query' %}"
         let monitorCreateURL = "{% url 'monitor:create' %}"
-        let reviewMonitor = [
-            {% for monitor in reviewMonitor %}
-                {% if monitor %}
-                    {
-                        'id': '{{ monitor.id }}',
-                        'name': '{{ monitor.name }}',
-                        'source': '{{ monitor.source }}',
-                    },
-                {% else %}
-                    null,
-                {% endif %}
-            {% endfor %}
-        ]
+        let layoutItemUpdateURL = "{% url 'monitor:update-layout-item' %}"
+        let layoutInfoUpdateURL = "{% url 'monitor:update-layout-info' %}"
+        let layoutQueryURL = "{% url 'monitor:query-layout' %}"
+        let layoutCreateURL = "{% url 'monitor:create-layout' %}"
+        let layoutDeleteURL = "{% url 'monitor:delete-layout' %}"
+        let layout = {
+            id: "{{ layout.id }}",
+            name: "{{ layout.name }}",
+            rows: "{{ layout.rows }}",
+            cols: "{{ layout.cols }}"
+        }
+        let csrfToken = "{{ csrf_token }}"
     </script>
+    <script src="{% static 'templates/pagination/pagination.js' %}"></script>
     <script src="{% static 'monitor/multiview/multiview.js' %}"></script>
 {% endblock %}

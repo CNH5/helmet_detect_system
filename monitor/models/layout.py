@@ -27,3 +27,11 @@ class Layout(models.Model):
         verbose_name="布局内容",
         null=False,
     )
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "cols": self.cols,
+            "rows": self.rows
+        }

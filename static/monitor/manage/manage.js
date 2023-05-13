@@ -6,6 +6,8 @@ let filterNumsBadge = $(".badge.filter-nums")
 
 // query param
 let ascendingOrder = true
+let currentPage = 1
+let pageSize = 10
 
 // other
 let monitorListData = []
@@ -38,9 +40,19 @@ function refreshTable(successCallback, errorCallback) {
         success: function (data) {
             currentPage = data["currentPage"]
             monitorListData = data["monitorList"]
-            pageNums = data["pageNums"]
             setTableBodyHTML()
-            setPaginationHTML()
+
+            $("#pagination").pagination({
+                currentPage: currentPage,
+                pageNums: data["pageNums"],
+                pageSize: pageSize,
+                onPageChange: function (cp, ps) {
+                    currentPage = cp
+                    pageSize = ps
+                    refreshTable()
+                }
+            })
+
             if (successCallback) {
                 successCallback(data)
             }
@@ -180,22 +192,6 @@ function getFilterData() {
     return filters
 }
 
-function setFilterNumBadge() {
-    let filterNums = 0
-    filterList.find(".filter-item").each(function () {
-        if ($(this).find("input[name=value]").val() !== "") {
-            filterNums++
-        }
-    })
-
-    if (filterNums > 0) {
-        filterNumsBadge.html(filterNums)
-        filterNumsBadge.removeClass("d-none")
-    } else {
-        filterNumsBadge.addClass("d-none")
-    }
-}
-
 // 初始
 $(() => {
     refreshTable();
@@ -234,20 +230,6 @@ monitorsList.on("click", ".helmet-detect-switch", function () {
     changeDetect([id], detect)
 })
 
-pageSizeInput.keydown(function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        refreshTable()
-    }
-})
-
-pageNumTipArea.on("keydown", "input[name=page-num]", function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        currentPage = this.value
-        refreshTable()
-    }
-})
 
 allCheckBox.bind("click", function () {
     let checked = this.checked
@@ -276,7 +258,7 @@ $("#close-checked-detect").click(function () {
 $("#delete-checked").click(function () {
     deleteMonitors = getCheckedMonitorID()
     $("#delete-confirm-modal").find(".modal-body").html(
-        "确定要将选中的 " + deleteMonitors.length + " 个监控删除吗？"
+        "确定要将选中的 " + deleteMonitors.length + " 个监控删除吗？相应的识别结果也会被删除。"
     )
 })
 
@@ -405,8 +387,22 @@ $(".btn.clean-filters").click(function () {
 })
 
 $("#filter-set-modal").bind("hide.bs.modal", function () {
-    setFilterNumBadge()
-    refreshTable()
+    let filterNums = 0
+    filterList.find("input[name=value]").each(function () {
+        if ($(this).val() !== "") {
+            filterNums++
+        }
+    })
+    if (parseInt(filterNumsBadge.html()) !== filterNums) {
+        currentPage = 1
+        refreshTable()
+    }
+    filterNumsBadge.html(filterNums)
+    if (filterNums > 0) {
+        filterNumsBadge.removeClass("d-none")
+    } else {
+        filterNumsBadge.addClass("d-none")
+    }
 })
 
 $("#order-change").click(function () {
@@ -442,20 +438,3 @@ $("button.delete-confirm").click(function () {
         }
     })
 })
-
-pagePreviousBtn.click(function () {
-    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
-        refreshTable()
-    }
-})
-
-pageNumArea.on("click", ".page-num", function () {
-    refreshTable()
-})
-
-pageNextBtn.click(function () {
-    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
-        refreshTable()
-    }
-})
-

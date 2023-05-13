@@ -16,7 +16,7 @@ from detect import detect_pool
 from . import utils
 from .forms import *
 
-from .models import MonitorInfo
+from .models import MonitorInfo, MultiViewLayout
 from .validators import INTEGER_PATTERN
 
 
@@ -27,11 +27,11 @@ def token_invalid(data, request):
 
 @require_POST
 @transaction.atomic
-def insert(request):
+def insert_monitor(request):
     """
     添加监控设备
     """
-    form = InsertForm(request.POST)
+    form = MonitorInsertForm(request.POST)
     if not form.is_valid():
         return JsonResponse({"code": 403, "msg": form.errors})
     data = form.cleaned_data
@@ -46,16 +46,13 @@ def insert(request):
 
 
 @require_POST
-def delete(request):
+def delete_monitor(request):
     """
     删除监控设备
     """
     form = DeleteForm(request.POST)
     if not form.is_valid():
-        return JsonResponse({
-            "code": 403,
-            "msg": form.errors
-        })
+        return JsonResponse({"code": 403, "msg": form.errors})
     data = form.cleaned_data
     monitors = MonitorInfo.objects.filter(pk__in=data.get("pk_list"))
     n, _ = monitors.delete()
@@ -235,3 +232,102 @@ def review_source(_, monitor_id):
                        b'Content-Type: image/jpeg\r\n\r\n' + img.tobytes() + b'\r\n')
 
     return StreamingHttpResponse(display_frame(), content_type='multipart/x-mixed-replace; boundary=frame')
+
+
+@require_POST
+def update_layout_item(request):
+    layout = MultiViewLayout.objects.filter(id=request.COOKIES.get("layout"))
+    if layout.count() == 0:
+        return JsonResponse({
+            "code": 403,
+            "msg": "布局id有误，请尝试清除cookie",
+        })
+    else:
+        layout = layout[0]
+    items = eval(layout.items)
+    items[int(request.POST.get("index"))] = int(request.POST.get("item"))
+    layout.items = str(items)
+    layout.save()
+    return JsonResponse({"code": 200, "msg": "布局内容设置成功", })
+
+
+@require_POST
+def update_layout_info(request):
+    form = LayoutInfoForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"code": 403, "msg": form.errors})
+    data = form.cleaned_data
+
+    layout = MultiViewLayout.objects.get(id=data.get("id"))
+
+    rows = data.get("rows")
+    cols = data.get("cols")
+    items = eval(layout.items)
+
+    n = rows * cols
+    if n > len(items):
+        items += [0] * (n - len(items))
+    elif n < len(items):
+        items = list(filter(lambda x: x > 0, items))
+        if len(items) < n:
+            items += [0] * (n - len(items))
+        elif len(items) > n:
+            items = items[:n]
+
+    layout.name = data.get("name")
+    layout.rows = rows
+    layout.cols = cols
+    layout.items = str(items)
+    n = layout.save()
+    return JsonResponse({"code": 200, "msg": f"修改了{n}条数据"})
+
+
+@require_POST
+def create_layout(request):
+    form = LayoutInfoForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"code": 403, "msg": form.errors})
+    data = form.cleaned_data
+    layout = MultiViewLayout.objects.create(
+        name=data.get("name"),
+        rows=data.get("rows"),
+        cols=data.get("cols"),
+        items=str([0] * data.get("rows") * data.get("cols"))
+    )
+    return JsonResponse({"code": 200, "layout": layout.id, "msg": "添加布局成功"})
+
+
+@require_GET
+def query_layout(request):
+    current_page = request.GET.get("currentPage", 1)
+    layouts = MultiViewLayout.objects.values("id", "name", "cols", "rows")
+
+    if (name := request.GET.get("name")) != "":
+        layouts = layouts.filter(name__regex=name)
+    if (rows := request.GET.get("rows")) != "":
+        layouts = layouts.filter(rows=rows)
+    if (cols := request.GET.get("cols")) != "":
+        layouts = layouts.filter(cols=cols)
+
+    paginator = Paginator(layouts, request.GET.get("pageSize", 10))
+    try:
+        layouts = paginator.page(current_page)
+    except PageNotAnInteger:
+        current_page = 1
+        layouts = paginator.page(current_page)
+    except EmptyPage:
+        current_page = paginator.num_pages
+        layouts = paginator.page(current_page)
+
+    return JsonResponse({
+        "layoutList": [layout for layout in layouts],
+        "currentPage": int(current_page),
+        "pageNums": paginator.num_pages,
+    })
+
+
+@require_POST
+def delete_layout(request):
+    layouts_id = request.POST.getlist("layouts", [])
+    n = MultiViewLayout.objects.filter(id__in=layouts_id).delete()
+    return JsonResponse({"code": 200, "msg": f"删除了 {n} 条数据"})

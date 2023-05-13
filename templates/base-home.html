@@ -47,40 +47,35 @@
         <div class="page-content d-flex flex-column min-vh-100">
             <!-- header area start -->
             <div class="header-area collapse show" id="header-collapse">
-                <div class="row align-items-center">
-                    <div class="col-sm-7">
-                        <div class="breadcrumbs-area d-flex">
-                            <div class="nav-btn mt-auto mb-auto">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                            <h4 class="page-title">
-                                {% block page-title %}Dashboard{% endblock %}
-                            </h4>
-                            {% block breadcrumbs %}
-                                <ul class="breadcrumbs">
-                                    <li><a href="#">Home</a></li>
-                                    <li><span>button</span></li>
-                                </ul>
-                            {% endblock %}
+                <div class="d-flex align-items-center">
+                    <div class="breadcrumbs-area d-flex">
+                        <div class="nav-btn mt-auto mb-auto">
+                            <span></span>
+                            <span></span>
+                            <span></span>
                         </div>
+                        <h4 class="page-title">
+                            {% block page-title %}Dashboard{% endblock %}
+                        </h4>
+                        {% block breadcrumbs %}
+                            <ul class="breadcrumbs">
+                                <li><a href="#">Home</a></li>
+                                <li><span>button</span></li>
+                            </ul>
+                        {% endblock %}
                     </div>
-                    <div class="col-sm-5 clearfix">
-                        <ul class="notification-area pull-right">
-                            <li id="full-view"><i class="ti-fullscreen"></i></li>
-                            <li id="full-view-exit"><i class="ti-zoom-out"></i></li>
-                            <li class="dropdown">
-                                <i class="ti-bell dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"></i>
-                                <div class="dropdown-menu bell-notify-box notify-box">
-                                    <!-- TODO: 完善消息框 -->
-                                    <span class="notify-title"></span>
-                                    <div class="notify-list"></div>
-                                </div>
-                            </li>
-                            <li class="settings-btn"><i class="ti-settings"></i></li>
-                        </ul>
-                    </div>
+                    <ul class="notification-area ms-auto pull-right">
+                        <li id="full-view"><i class="ti-fullscreen"></i></li>
+                        <li id="full-view-exit"><i class="ti-zoom-out"></i></li>
+                        <li class="dropdown">
+                            <i class="ti-bell dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                            <div class="dropdown-menu bell-notify-box notify-box">
+                                <span class="notify-title"></span>
+                                <div class="notify-list"></div>
+                            </div>
+                        </li>
+                        <li class="settings-btn"><i class="ti-settings"></i></li>
+                    </ul>
                 </div>
             </div>
             <!-- header area end -->

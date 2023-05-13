@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import MonitorInfo
+from .models import MonitorInfo, MultiViewLayout
 from django.core.paginator import Paginator
 
 
@@ -25,17 +25,23 @@ def info(request, monitor_id: int):
 
 
 def multiview(request):
-    if id_list := request.COOKIES.get("multiviewMonitors"):
-        id_list = id_list.split("%")
+    if MultiViewLayout.objects.exists():
+        layout = MultiViewLayout.objects.filter(id=request.COOKIES.get("layout"))
+        layout = MultiViewLayout.objects.all()[0] if layout.count() == 0 else layout[0]
     else:
-        id_list = [0] * 9
+        layout = MultiViewLayout.objects.create(name="默认布局", cols=3, rows=3, items=str([0] * 9))
+
     monitors = []
-    for i in id_list:
+    for i in eval(layout.items):
         m = MonitorInfo.objects.filter(id=i)
         monitors.append(m[0].to_json() if m.count() > 0 else '')
-    return render(request, "monitor/multiview.html", {
-        "reviewMonitor": monitors
+
+    response = render(request, "monitor/multiview.html", {
+        "monitors": monitors,
+        "layout": layout.to_json()
     })
+    response.set_cookie("layout", layout.id, max_age=31536000)  # 很奇怪，设置expires没有效果
+    return response
 
 
 def create(request):

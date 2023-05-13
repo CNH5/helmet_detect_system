@@ -8,6 +8,11 @@
     overflow: hidden;
 }
 
+.source-img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
 .player-bar {
     width: 100%;
     height: 15%;
@@ -38,8 +43,12 @@
     width: 85px;
 }
 
-.monitor-data {
+.table-data {
     cursor: pointer;
+}
+
+.table-data:hover {
+    background: #f8f9fa;
 }
 
 #none-tips-area {
@@ -61,6 +70,8 @@
     margin-bottom: auto;
 }
 
-.monitor-data:hover {
-    background: #f8f9fa;
+@media (min-width: 992px) {
+    .modal-md {
+        --bs-modal-width: 700px
+    }
 }

@@ -1,17 +1,3 @@
-// 布局修改
-let rowInput = $("input[name=row]")
-let colInput = $("input[name=col]")
-let editRowColBtn = $(".edit-btn")
-let editSaveBtn = $(".edit-save-btn")
-let editCancelBtn = $(".edit-cancel-btn")
-
-// 分页
-let pageSizeInput = $("input[name=page-size]")
-let pagePreviousBtn = $(".page-previous")
-let pageNumArea = $(".page-num-area")
-let pageNextBtn = $(".page-next")
-let pageNumTipArea = $(".page-num-tip-area")
-
 // 监控筛选
 let monitorNameInput = $("input[name=monitor-name]")
 let monitorSourceInput = $("input[name=monitor-source]")
@@ -19,7 +5,7 @@ let monitorIdStartInput = $("input[name=id-range-start]")
 let monitorIdEndInput = $("input[name=id-range-end]")
 let monitorDateStartInput = $("input[name=create-date-start]")
 let monitorDateEndInput = $("input[name=create-date-end]")
-let orderSelect = $("select[name=order-select]")
+let monitorOrderSelect = $("select[name=order-select]")
 
 // 其它
 let reviewContainer = $(".review-grid")
@@ -28,7 +14,11 @@ let monitorListArea = $(".monitor-list-area")
 let confirmMonitorBtn = $("#confirm-monitor-btn")
 let selectedMonitorInfo = $(".selected-monitor-info")
 
-const queryDataDict = [{
+let layoutExchangeModal = $("#layout-exchange-modal")
+
+let layoutTableBody = $("tbody.layout")
+
+const monitorQueryDataDict = [{
     "input": monitorNameInput,
     "col": "name",
     "operation": "regex",
@@ -55,18 +45,21 @@ const queryDataDict = [{
 }]
 
 // monitor query param
-let currentPage = 1
-let pageNums = 5
-
+let monitorCurrentPage = 1
+let monitorPageSize = 6
 let monitorList = []
 
-let selectedMonitor = null
+let selectedMonitor
 let changeIndex
 
-let defaultPageSize = 5
+let layoutCurrentPage = 1
+let layoutPageSize = 6
+let layoutList = []
+let deleteLayouts
+let selectedLayout
 
 
-function setPlayerHTML() {
+function playerWindowHTML() {
     return '<div class="source-player w-100 h-100 align-middle d-flex">' +
         '<img class="source-img m-auto" src="' + monitorReviewURl.replace("0", selectedMonitor["id"]) + '" alt="#">' +
         '<div class="player-bar info">' +
@@ -102,7 +95,7 @@ function setPlayerHTML() {
         '</div>'
 }
 
-function setSourceHTML() {
+function noneWindowHTML() {
     return '<a href="javascript:" class="add-source d-flex w-100 h-100 text-white text-center" ' +
         'data-bs-toggle="modal" data-bs-target="#monitor-select-modal">' +
         '<div class="m-auto">' +
@@ -112,19 +105,19 @@ function setSourceHTML() {
         '</a>'
 }
 
-function hasFilter() {
-    for (let i = 0; i < queryDataDict.length; i++) {
-        if (queryDataDict[i]["input"].val() !== "") {
+function hasMonitorFilter() {
+    for (let i = 0; i < monitorQueryDataDict.length; i++) {
+        if (monitorQueryDataDict[i]["input"].val() !== "") {
             return true
         }
     }
     return false
 }
 
-function getQueryParams() {
+function getQueryMonitorParams() {
     let filters = []
-    for (let i = 0; i < queryDataDict.length; i++) {
-        let q = queryDataDict[i]
+    for (let i = 0; i < monitorQueryDataDict.length; i++) {
+        let q = monitorQueryDataDict[i]
         let value = q["input"].val()
         if (value !== "") {
             filters.push({
@@ -137,60 +130,10 @@ function getQueryParams() {
         }
     }
     return {
-        "currentPage": currentPage,
-        "pageSize": pageSizeInput.val(),
-        "ascendingOrder": orderSelect.val() === "true",
+        "currentPage": monitorCurrentPage,
+        "pageSize": monitorPageSize,
+        "ascendingOrder": monitorOrderSelect.val(),
         "filter": JSON.stringify(filters)
-    }
-}
-
-function setPaginationHTML() {
-    // 绘制分页
-    if (pageNums === 1) {
-        $(".multi-page").addClass("visually-hidden")
-        pageNumTipArea.addClass("ms-auto")
-        pageNumTipArea.html('共 1 页')
-    } else {
-        $(".multi-page").removeClass("visually-hidde")
-        pageNumTipArea.removeClass("ms-auto")
-        pageNumTipArea.html(
-            '共 ' + pageNums + ' 页，跳至' +
-            '<label class="mx-1 mb-0">' +
-            "<input class='pagination-input rounded form-control form-control-sm' type='text' name='num'>" +
-            '</label>' +
-            '页'
-        )
-        let s, e
-        if (pageNums <= 7 || currentPage <= 4) {
-            s = 1
-            e = pageNums
-        } else if (currentPage + 3 >= pageNums) {
-            s = pageNums - 6
-            e = pageNums
-        } else {
-            s = currentPage - 3
-            e = currentPage + 3
-        }
-        pageNumArea.html("")
-        for (let i = s; i <= e; i++) {
-            pageNumArea.append(
-                "<button class='page-num btn btn-xs btn" + (i === currentPage ? "" : "-outline") + "-primary ms-1 border'>" +
-                i +
-                "</button>"
-            )
-        }
-
-        if (currentPage === 1) {
-            pagePreviousBtn.addClass("disabled")
-        } else {
-            pagePreviousBtn.removeClass("disabled")
-        }
-
-        if (currentPage === pageNums) {
-            pageNextBtn.addClass("disabled")
-        } else {
-            pageNextBtn.removeClass("disabled")
-        }
     }
 }
 
@@ -198,7 +141,7 @@ function setMonitorTableHTML() {
     monitorListArea.html("")
     if (monitorList.length === 0) {
         $(".pagination-area").addClass("visually-hidden")
-        if (hasFilter()) {
+        if (hasMonitorFilter()) {
             $(".filter-none-tips").removeClass("visually-hidden")
             $(".data-none-tips").addClass("visually-hidden")
         } else {
@@ -213,7 +156,7 @@ function setMonitorTableHTML() {
         for (let i = 0; i < monitorList.length; i++) {
             let monitor = monitorList[i]
             monitorListArea.append(
-                '<tr class="text-center align-middle monitor-data">' +
+                '<tr class="text-center align-middle table-data">' +
                 '<td>' + monitor["id"] + '</td>' +
                 '<td>' + monitor["name"] + '</td>' +
                 '<td>' + monitor["create_date"] + '</td>' +
@@ -227,8 +170,6 @@ function setMonitorTableHTML() {
                 '</tr>'
             )
         }
-
-        setPaginationHTML()
     }
 }
 
@@ -238,12 +179,22 @@ function queryMonitor() {
         method: "GET",
         traditional: true,
         url: monitorQueryURL,
-        data: getQueryParams(),
+        data: getQueryMonitorParams(),
         success: function (data) {
-            currentPage = data["currentPage"]
-            pageNums = data["pageNums"]
             monitorList = data["monitorList"]
+            monitorCurrentPage = data["currentPage"]
             setMonitorTableHTML()
+            // 设置分页栏
+            $("#monitor-pagination").pagination({
+                currentPage: monitorCurrentPage,
+                pageNums: data["pageNums"],
+                pageSize: monitorPageSize,
+                onPageChange: function (cp, ps) {
+                    monitorCurrentPage = cp
+                    monitorPageSize = ps
+                    queryMonitor()
+                }
+            })
         },
         error: function (e) {
             console.log(e)
@@ -252,91 +203,105 @@ function queryMonitor() {
     })
 }
 
-function clearCheckedMonitor() {
-    selectedMonitor = null
-    selectedMonitorInfo.html("无")
-}
-
-function getReviewMonitorIdData() {
-    let idList = []
-    let row = parseInt($.cookie("multiviewRows"))
-    let col = parseInt($.cookie("multiviewCols"))
-    let n = row * col
-    for (let i = 0; i < n; i++) {
-        if (i < reviewMonitor.length) {
-            let m = reviewMonitor[i]
-            idList.push(m ? m["id"] : 0)
-        } else {
-            idList.push(0)
+function updateLayoutItem(index, value) {
+    $.ajax({
+        method: "POST",
+        url: layoutItemUpdateURL,
+        data: {
+            index: index,
+            item: value,
+            csrfmiddlewaretoken: csrfToken,
+        },
+        success: function (data) {
+            if (data["code"] === 403) {
+                customAlert("warning", "修改失败!", data["msg"])
+            } else if (data["code"] === 200) {
+                customAlert("success", "设置成功!", data["msg"])
+            }
+        },
+        error: function (e) {
+            console.log(e)
+            customAlert("danger", "请求失败！", "服务器异常")
         }
-    }
-    return idList.join("%")
+    })
 }
 
-function resetCookie() {
-    $.cookie("multiviewRows", 3, {expires: 10000})
-    $.cookie("multiviewCols", 3, {expires: 10000})
-    $.cookie("multiviewMonitors", getReviewMonitorIdData(), {expires: 10000})
+function queryLayout() {
+    $.ajax({
+        method: "GET",
+        url: layoutQueryURL,
+        data: {
+            currentPage: layoutCurrentPage,
+            pageSize: layoutPageSize,
+            name: layoutExchangeModal.find("input[name=layout-name]").val(),
+            cols: layoutExchangeModal.find("input[name=layout-cols]").val(),
+            rows: layoutExchangeModal.find("input[name=layout-rows]").val()
+        },
+        success: function (data) {
+            layoutList = data["layoutList"]
+            layoutTableBody.html("")
+            for (let i = 0; i < layoutList.length; i++) {
+                let layoutData = layoutList[i]
+                layoutTableBody.append(
+                    '<tr class="text-center align-middle table-data">' +
+                    '    <td>' +
+                    '        <label class="mb-0 d-flex">' +
+                    '            <input type="checkbox" name="chk" class="my-auto">' +
+                    '            <span class="ms-1">' + layoutData["id"] + '</span>' +
+                    '        </label>' +
+                    '    </td>' +
+                    '    <td class="layout-select">' + layoutData["name"] + '</td>' +
+                    '    <td class="layout-select">' + layoutData["rows"] + '</td>' +
+                    '    <td class="layout-select">' + layoutData["cols"] + '</td>' +
+                    '    <td>' +
+                    '        <i class="ti-trash text-danger" data-bs-toggle="modal"' +
+                    '           data-bs-target="#layout-delete-confirm-modal"></i>' +
+                    '    </td>' +
+                    '</tr>'
+                )
+            }
+
+            $("input[name=layout-all-check]").prop("checked", false)
+            $(".layout-checked-delete").prop("disabled", true)
+
+            if (layoutList.length === 0) {
+                layoutExchangeModal.find(".filter-none-tips").removeClass("visually-hidden")
+            } else {
+                layoutExchangeModal.find(".filter-none-tips").addClass("visually-hidden")
+            }
+
+            $(".layout-pagination").pagination({
+                currentPage: monitorCurrentPage,
+                pageNums: data["pageNums"],
+                pageSize: monitorPageSize,
+                showRange: 5,
+                onPageChange: function (cp, ps) {
+                    layoutCurrentPage = cp
+                    layoutPageSize = ps
+                    queryLayout()
+                }
+            })
+        },
+        error: function (e) {
+            console.log(e)
+            customAlert("danger", "请求失败!", "服务器异常")
+        }
+    })
+}
+
+function checkedLayoutsId() {
+    let res = []
+    layoutTableBody.find("input[name=chk]").each(function () {
+        if ($(this).prop("checked")) {
+            res.push(layoutList[$(this).parent().parent().parent().index()].id)
+        }
+    })
+    return res
 }
 
 $(() => {
-    let rowNums = $.cookie("multiviewRows")
-    let colNums = $.cookie("multiviewCols")
-    if (!rowNums || !colNums) {
-        resetCookie()
-        rowNums = $.cookie("multiviewRows")
-        colNums = $.cookie("multiviewCols")
-    }
-    rowInput.prop("value", rowNums)
-    colInput.prop("value", colNums)
-    reviewContainer.css("grid-template-columns", "repeat(" + colNums + ", 1fr)")
-    reviewContainer.css("grid-template-rows", "repeat(" + rowNums + ", 1fr)")
-
-    pageSizeInput.prop("value", defaultPageSize)
-})
-
-rowInput.keyup(function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
-colInput.keyup(function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
-editRowColBtn.click(function () {
-    editRowColBtn.addClass("d-none")
-    rowInput.prop("disabled", false)
-    colInput.prop("disabled", false)
-    editSaveBtn.removeClass("d-none")
-    editCancelBtn.removeClass("d-none")
-})
-
-editSaveBtn.click(function () {
-    editSaveBtn.addClass("d-none")
-    editCancelBtn.addClass("d-none")
-    editRowColBtn.removeClass("d-none")
-    rowInput.prop("disabled", true)
-    colInput.prop("disabled", true)
-    if ($.cookie("multiviewRows") !== rowInput[0].value || $.cookie("multiviewCols") !== colInput[0].value) {
-        $.cookie("multiviewRows", rowInput.val(), 10000)
-        $.cookie("multiviewCols", colInput.val(), 10000)
-        $.cookie("multiviewMonitors", getReviewMonitorIdData(), {expires: 10000})
-        customAlert("success", "布局修改成功！", "即将刷新窗口。")
-        setTimeout(function () {
-            location.reload()
-        }, 1500)
-    }
-})
-
-editCancelBtn.click(function () {
-    editSaveBtn.addClass("d-none")
-    editCancelBtn.addClass("d-none")
-    rowInput.prop("disabled", true)
-    colInput.prop("disabled", true)
-    editRowColBtn.removeClass("d-none")
-
-    rowInput.prop("value", $.cookie("multiviewRows"))
-    colInput.prop("value", $.cookie("multiviewCols"))
+    reviewContainer.css("grid-template-columns", "repeat(" + layout.cols + ", 1fr)")
+    reviewContainer.css("grid-template-rows", "repeat(" + layout.rows + ", 1fr)")
 })
 
 reviewContainer.on("click", ".player-btn.info", function () {
@@ -360,8 +325,9 @@ reviewContainer.on("click", ".player-btn.change", function () {
 
 reviewContainer.on("click", ".player-btn.remove", function () {
     // 移除预览
-    let index = $(this).parent().parent().parent().index()
-    reviewContainer.children().eq(index).html(setSourceHTML())
+    let index = $(this).parent().parent().parent().parent().index()
+    updateLayoutItem(index, 0)
+    reviewContainer.children().eq(index).html(noneWindowHTML())
 })
 
 reviewContainer.on("mouseover", ".source-img, .player-bar", function () {
@@ -436,8 +402,7 @@ monitorDateEndInput.change(function () {
     queryMonitor()
 })
 
-orderSelect.change(function () {
-    ascendingOrder = !ascendingOrder
+monitorOrderSelect.change(function () {
     queryMonitor()
 })
 
@@ -452,20 +417,21 @@ monitorSelectModal.bind("show.bs.modal", function () {
 })
 
 monitorSelectModal.bind("hide.bs.modal", function () {
-    clearCheckedMonitor()
+    // 清空选中的监控设备
+    selectedMonitor = null
+    selectedMonitorInfo.html("无")
 })
 
 confirmMonitorBtn.click(function () {
     // 确认选择监控按钮
     if (!$(this).is("disabled")) {
-        reviewMonitor[changeIndex] = selectedMonitor
-        $.cookie("multiviewMonitors", getReviewMonitorIdData(), {expires: 10000})
-        reviewContainer.children().eq(changeIndex).html(setPlayerHTML())
+        updateLayoutItem(changeIndex, selectedMonitor.id)
+        reviewContainer.children().eq(changeIndex).html(playerWindowHTML())
         $(this).prev("button").click()
     }
 })
 
-monitorListArea.on("click", ".monitor-data", function () {
+monitorListArea.on("click", ".table-data", function () {
     if (!selectedMonitor) {
         confirmMonitorBtn.prop("disabled", false)
     }
@@ -479,48 +445,213 @@ $("redirect-monitor-insert-btn").click(function () {
     window.open(monitorCreateURL)
 })
 
-pageNumTipArea.on("keyup", "input[name=num]", function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
-pageNumTipArea.on("keydown", "input[name=num]", function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        currentPage = this.value
-        queryMonitor()
-    }
-})
-
-pagePreviousBtn.click(function () {
-    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
-        currentPage--
-        queryMonitor()
-    }
-})
-
-pageNumArea.on("click", ".page-num", function () {
-    currentPage = $(this).html()
-    queryMonitor()
-})
-
-pageNextBtn.click(function () {
-    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
-        currentPage++
-        queryMonitor()
-    }
-})
-
-pageSizeInput.keyup(function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
-pageSizeInput.keydown(function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        queryMonitor()
-    }
-})
-
-$(".add-source").click(function () {
+reviewContainer.on("click", ".add-source", function () {
     changeIndex = $(this).parent().index()
+})
+
+$("#layout-update-modal").bind("show.bs.modal", function () {
+    let layoutForm = $("form.layout-info")
+    layoutForm.removeClass("was-validated")
+    layoutForm.find("input[name=name]").prop("value", layout.name)
+    layoutForm.find("input[name=rows]").prop("value", layout.rows)
+    layoutForm.find("input[name=cols]").prop("value", layout.cols)
+
+}).on("click", ".save-layout", function () {
+    $("form.layout-info").submit()
+})
+
+$("form.layout-info").submit(function (event) {
+    event.preventDefault()
+    let that = $(this)
+    if (!this.checkValidity()) {
+        event.stopPropagation()
+        that.addClass("was-validated")
+    } else {
+        $.post({
+            url: layoutInfoUpdateURL,
+            data: {
+                id: layout.id,
+                name: that.find("input[name=name]").val(),
+                rows: that.find("input[name=rows]").val(),
+                cols: that.find("input[name=cols]").val(),
+                csrfmiddlewaretoken: that.find("input[name=csrfmiddlewaretoken]").val()
+            },
+            success: function (data) {
+                if (data["code"] === 200) {
+                    customAlert("success", "布局修改成功！", "")
+                    setTimeout(function () {
+                        location.reload()
+                    }, 1500)
+                } else if (data["code"] === 403) {
+                    customAlert("warning", "修改失败", data["msg"])
+                }
+            },
+            error: function (e) {
+                console.log(e)
+                customAlert("danger", "请求失败!", "服务器异常")
+            }
+        })
+    }
+})
+
+$("input[name=cols] input[name=rows]").keyup(function () {
+    this.value = this.value.replace(/\D/, "")
+})
+
+layoutExchangeModal.bind("show.bs.modal", function () {
+    queryLayout()
+
+}).bind("hide.bs.modal", function () {
+    selectedLayout = null
+    $(this).find(".selected-layout-info").html("无")
+    $(this).find(".confirm-layout").prop("disabled", true)
+
+}).on("click", ".layout-clean-filter", function () {
+    layoutExchangeModal.find("input[name=layout-name]").prop("value", "")
+    layoutExchangeModal.find("input[name=layout-rows]").prop("value", "")
+    layoutExchangeModal.find("input[name=layout-cols]").prop("value", "")
+    queryLayout()
+
+})
+
+$("input[name=layout-name]").change(function () {
+    queryLayout()
+})
+
+$("input[name=layout-rows]").change(function () {
+    queryLayout()
+}).keyup(function () {
+    this.value = this.value.replace(/\D/, "")
+})
+
+$("input[name=layout-cols]").change(function () {
+    queryLayout()
+}).keyup(function () {
+    this.value = this.value.replace(/\D/, "")
+})
+
+layoutTableBody.on("click", ".layout-select", function () {
+    let index = $(this).parent().index()
+    selectedLayout = layoutList[index]
+    let modal = $("#layout-exchange-modal")
+    modal.find(".confirm-layout").prop("disabled", false)
+    modal.find(".selected-layout-info").html(
+        selectedLayout.name + "（ID: " + selectedLayout.id + "，行数: " + selectedLayout.rows + "，列数: " + selectedLayout.rows + "）"
+    )
+
+}).on("click", ".ti-trash", function () {
+    let l = layoutList[$(this).parent().parent().index()]
+    deleteLayouts = [l.id]
+    $("#layout-delete-confirm-modal").find(".modal-body").html("确定要删除布局 \"" + l.name + "\" 吗？")
+
+}).on("change", "input[name=chk]", function () {
+    let checkedNums = checkedLayoutsId().length
+
+    $("input[name=layout-all-check]").prop("checked", checkedNums === layoutList.length)
+    $(".layout-checked-delete").prop("disabled", checkedNums === 0)
+})
+
+$(".layout-checked-delete").click(function () {
+    if (!$(this).is("disabled")) {
+        deleteLayouts = checkedLayoutsId()
+        $("#layout-delete-confirm-modal").find(".modal-body").html("确定要删除选中的 " + deleteLayouts.length + " 个布局吗？")
+    }
+})
+
+$("input[name=layout-all-check]").change(function () {
+    let checked = $(this).prop("checked")
+    layoutTableBody.find("input[name=chk]").each(function () {
+        $(this).prop("checked", checked)
+    })
+    $(".layout-checked-delete").prop("disabled", !checked)
+})
+
+$(".confirm-layout").click(function () {
+    if (!$(this).is("disabled")) {
+        customAlert("success", "布局切换成功！", "界面即将刷新。")
+        $.cookie("layout", selectedLayout.id, {
+            path: "/"
+        })
+        setTimeout(function () {
+            location.reload()
+        }, 1500)
+    }
+    $("#layout-exchange-modal").modal("hide")
+})
+
+$("#layout-delete-confirm-modal").bind("hide.bs.modal", function () {
+    $("#layout-exchange-modal").modal("show")
+
+}).on("click", ".confirm-delete", function () {
+    $.ajax({
+        method: "POST",
+        url: layoutDeleteURL,
+        traditional: true,
+        data: {
+            layouts: deleteLayouts,
+            csrfmiddlewaretoken: csrfToken,
+        },
+        success: function (data) {
+            switch (data["code"]) {
+                case 200:
+                    customAlert("success", "布局删除成功！", data["msg"])
+                    if (deleteLayouts.indexOf(parseInt($.cookie("layout"))) >= 0) {
+                        setTimeout(function () {
+                            location.reload()
+                        }, 1500)
+                    }
+                    break
+                case 403:
+                    customAlert("warning", "布局删除失败！", data["msg"])
+                    break
+                default:
+            }
+        },
+        error: function (e) {
+            console.log(e)
+            customAlert("danger", "请求失败!", "服务器异常")
+        }
+    })
+    queryLayout()
+})
+
+$("form.layout-create").submit(function (event) {
+    event.preventDefault()
+    let that = $(this)
+    if (!this.checkValidity()) {
+        event.stopPropagation()
+        that.addClass("was-validated")
+    } else {
+        $.post({
+            url: layoutCreateURL,
+            data: {
+                id: layout.id,
+                name: that.find("input[name=name]").val(),
+                rows: that.find("input[name=rows]").val(),
+                cols: that.find("input[name=cols]").val(),
+                csrfmiddlewaretoken: that.find("input[name=csrfmiddlewaretoken]").val()
+            },
+            success: function (data) {
+                if (data["code"] === 200) {
+                    customAlert("success", "布局创建成功！", "")
+                    $.cookie("layout", data["layout"], {
+                        path: "/"
+                    })
+                    setTimeout(function () {
+                        location.reload()
+                    }, 1500)
+                } else if (data["code"] === 403) {
+                    customAlert("warning", "布局创建失败！", data["msg"])
+                }
+            },
+            error: function (e) {
+                console.log(e)
+                customAlert("danger", "请求失败!", "服务器异常")
+            }
+        })
+    }
+})
+
+$("#layout-create-modal").on("click", ".save-layout", function () {
+    $("form.layout-create").submit()
 })

@@ -1,8 +1,12 @@
 let resultsList = $(".results-list")
 let allCheckBox = $("input[name=all-check]")
+let ascSelect = $("select[name=asc]")
 
 let resultsListData = []
 let deleteId
+
+let currentPage = 1
+let pageSize = 10
 
 function showResultsData() {
     resultsList.html("")
@@ -50,31 +54,8 @@ function getCheckedResultsId() {
     return idList
 }
 
-function clearChecked() {
-    allCheckBox.prop("checked", false)
-    $("button.delete-selected").prop("disabled", true)
-    if (resultsListData.length === 0) {
-        allCheckBox.addClass("disabled")
-    } else {
-        allCheckBox.removeClass("disabled")
-    }
-}
-
 function hasFilter() {
     return $("select[name=col]").val() !== "" || $("input[name=start-time]").val() !== "" || $("input[name=end-time]").val() !== ""
-}
-
-function setTips() {
-    if (resultsListData.length === 0) {
-        if (hasFilter()) {
-            $(".tips.filter-none").removeClass("visually-hidden")
-        } else {
-            $(".tips.none-results").removeClass("visually-hidden")
-        }
-    } else {
-        $(".tips.filter-none").addClass("visually-hidden")
-        $(".tips.none-results").addClass("visually-hidden")
-    }
 }
 
 function getResultsData(successCallback, errorCallback) {
@@ -85,18 +66,49 @@ function getResultsData(successCallback, errorCallback) {
             col: $("select[name=col]").val(),
             st: $("input[name=start-time]").val(),
             et: $("input[name=end-time]").val(),
-            asc: $("select[name=asc]").val(),
+            asc: ascSelect.val(),
             currentPage: currentPage,
             pageSize: pageSize,
         },
         success: function (data) {
             currentPage = data["currentPage"]
-            pageNums = data["pageNums"]
+            pageSize = data["pageSize"]
             resultsListData = data["resultsList"]
+
             showResultsData()
-            setTips()
-            clearChecked()
-            setPaginationHTML(resultsListData.length === 0)
+
+            if (resultsListData.length === 0) {
+                // 设置空数据提示
+                if (hasFilter()) {
+                    $(".tips.filter-none").removeClass("visually-hidden")
+                } else {
+                    $(".tips.none-results").removeClass("visually-hidden")
+                }
+            } else {
+                $(".tips.filter-none").addClass("visually-hidden")
+                $(".tips.none-results").addClass("visually-hidden")
+            }
+
+            // 清除选中状态
+            allCheckBox.prop("checked", false)
+            $("button.delete-selected").prop("disabled", true)
+            if (resultsListData.length === 0) {
+                allCheckBox.addClass("disabled")
+            } else {
+                allCheckBox.removeClass("disabled")
+            }
+
+            // 设置分页栏
+            $("#pagination").pagination({
+                currentPage: currentPage,
+                pageNums: data["pageNums"],
+                pageSize: pageSize,
+                onPageChange: function (cp, ps) {
+                    currentPage = cp
+                    pageSize = ps
+                    getResultsData()
+                }
+            })
             if (successCallback) {
                 successCallback()
             }
@@ -190,6 +202,7 @@ resultsList.on("click", "input[name=chk]", function () {
 
 allCheckBox.click(function () {
     let checked = this.checked
+    $(".btn.delete-selected").prop("disabled", !checked)
     resultsList.find("input[name=chk]").each(function () {
         $(this).prop("checked", checked)
     })
@@ -232,32 +245,8 @@ resultsList.on("click", "i.ti-trash", function () {
     )
 })
 
-pagePreviousBtn.click(function () {
-    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
-        getResultsData()
-    }
-})
-
-pageNumArea.on("click", ".page-num", function () {
+ascSelect.change(function () {
+    currentPage = 1
     getResultsData()
 })
 
-pageNextBtn.click(function () {
-    if ($(this).attr("class").split(" ").indexOf("disabled") < 0) {
-        getResultsData()
-    }
-})
-
-pageSizeInput.keydown(function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        getResultsData()
-    }
-})
-
-pageNumTipArea.on("keydown", "input[name=page-num]", function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        getResultsData()
-    }
-})

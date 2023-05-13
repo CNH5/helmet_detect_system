@@ -8,14 +8,12 @@ let startTimeInput = $("#start-time")
 let endTimeInput = $("#end-time")
 let resultTip = $(".result-tip-area")
 let allCheckBox = $("input[name=all-check-box]")
-let deleteCheckedBtn = $(".delete-checked-btn")
-let paginationArea = $(".pagination-area")
+let deleteCheckedBtn = $(".delete-checked")
+let orderSelect = $("#order-select")
 
 // params
 let currentPage = 1
 let pageSize = 10
-let ascendingOrder = true
-let pageNums = 0
 let resultDataList = []
 
 
@@ -39,7 +37,7 @@ function queryData() {
     let data = {
         currentPage: currentPage,
         pageSize: pageSize,
-        asc: ascendingOrder,
+        asc: orderSelect.val(),
         col: detectTypeSelect.val()
     }
     if (startTimeInput[0].value !== "") {
@@ -63,9 +61,7 @@ function getResultsData(successCallback, errorCallback) {
         success: function (data) {
             currentPage = data["currentPage"]
             resultDataList = data["resultList"]
-            pageNums = resultDataList.length === 0 ? 0 : data["pageNums"]
 
-            setPaginationHTML()
             resultList.html("")
             resultTip.html("")
 
@@ -103,6 +99,22 @@ function getResultsData(successCallback, errorCallback) {
                     )
                 }
             }
+
+            allCheckBox.prop("checked", false)
+            deleteCheckedBtn.prop("disabled", true)
+
+            // 设置分页栏
+            $("#pagination").pagination({
+                currentPage: currentPage,
+                pageNums: data["pageNums"],
+                pageSize: pageSize,
+                onPageChange: function (cp, ps) {
+                    currentPage = cp
+                    pageSize = ps
+                    getResultsData()
+                }
+            })
+
             if (successCallback) {
                 successCallback()
             }
@@ -136,59 +148,11 @@ function requestDeleteResult(idList) {
     })
 }
 
-function setPaginationHTML() {
-    if (pageNums > 1) {
-        let s, e
-        if (pageNums <= 7 || currentPage <= 4) {
-            s = 1
-            e = pageNums
-        } else if (currentPage + 3 >= pageNums) {
-            s = pageNums - 6
-            e = pageNums
-        } else {
-            s = currentPage - 3
-            e = currentPage + 3
-        }
-        let pageHTML =
-            '<ul class="pagination col-md-auto ms-auto me-auto">' +
-            '<li class="page-item previous ' + (currentPage === 1 ? "disabled" : "") + '">' +
-            '<a href="javascript:" class="page-link rounded">上一页</a>' +
-            '</li>'
-        for (let i = s; i <= e; i++) {
-            pageHTML +=
-                '<li class="page-item rounded ms-2 ' + (currentPage === i ? "active" : "") + '">' +
-                '<a href="javascript:" class="page-link page-num rounded">' + i + '</a>' +
-                '</li>'
-        }
-        pageHTML +=
-            '<li class="page-item next ms-2">' +
-            '<a href="javascript:" class="page-link rounded ' + (currentPage === pageNums ? "disabled" : "") + '">' +
-            '下一页' +
-            '</a>' +
-            '</li>' +
-            '<li class="ms-2">' +
-            "<div class='input-group input-group-sm align-items-center'>" +
-            '<label for="page-num-input" class="me-2 mt-2">共 ' + pageNums + ' 页，跳至</label>' +
-            "<input id='page-num-input' class='rounded form-control'>" +
-            "<div class='ms-2'>页</div>" +
-            '</div>' +
-            '</li>' +
-            '</ul>'
-        paginationArea.html(pageHTML)
-    } else if (pageNums === 1) {
-        paginationArea.html("<div class='ms-auto'>共 1 页</div>")
-    } else {
-        paginationArea.html("")
-    }
-}
-
-function loadUrlData() {
+$(() => {
+    // load data from url
     let defaultType = window.location.href.split("#")[1]
     detectTypeSelect.children("option[value=" + defaultType + "]").attr("selected", "selected")
-}
 
-$(() => {
-    loadUrlData()
     getResultsData()
 })
 
@@ -247,19 +211,22 @@ formTitle.on("click", ".btn-cancel-edit", function () {
 })
 
 detectTypeSelect.change(function () {
+    currentPage = 1
     getResultsData()
 })
 
-$("#order-select").change(function () {
-    ascendingOrder = !ascendingOrder
+orderSelect.change(function () {
+    currentPage = 1
     getResultsData()
 })
 
 startTimeInput.change(function () {
+    currentPage = 1
     getResultsData()
 })
 
 endTimeInput.change(function () {
+    currentPage = 1
     getResultsData()
 })
 
@@ -308,37 +275,6 @@ allCheckBox.click(function () {
     resultList.find("input[name=chk]").each(function () {
         $(this).prop("checked", that.checked)
     })
-})
-
-paginationArea.on("click", ".previous", function () {
-    if (!$(this).attr("class").split(" ").indexOf("disabled") >= 0) {
-        currentPage -= 1
-        getResultsData()
-    }
-})
-
-paginationArea.on("click", ".page-num", function () {
-    currentPage = $(this).html()
-    getResultsData()
-})
-
-paginationArea.on("click", ".next", function () {
-    if (!$(this).attr("class").split(" ").indexOf("disabled") >= 0) {
-        currentPage += 1
-        getResultsData()
-    }
-})
-
-paginationArea.on("keyup", "#page-num-input", function () {
-    this.value = this.value.replace(/\D/, "")
-})
-
-paginationArea.on("keydown", "#page-num-input", function (e) {
-    if (e.keyCode === 13) {
-        // 输入回车
-        currentPage = this.value
-        getResultsData()
-    }
 })
 
 $("input[name=detect]").click(function () {

@@ -53,7 +53,7 @@ def sub_clean():
     """
     while True:
         session_keys = []
-        for key in SUB_POOL:
+        for key in SUB_POOL.keys():
             sub = SUB_POOL[key]
             if time.time() > sub["last-request-time"] + settings.SUB_TIMEOUT_INTERVAL:
                 session_keys.append(key)
