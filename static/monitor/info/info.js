@@ -305,3 +305,23 @@ $("input[name=detect]").click(function () {
         }
     })
 })
+
+$(".source-video").on("click", ".player-btn.alt", function () {
+    handleFullScreen($(this).parent().parent().parent()[0])
+
+    $(this).removeClass("alt")
+    $(this).addClass("exit-alt")
+    $(this).prop("title", "退出全屏")
+
+}).on("click", ".player-btn.exit-alt", function () {
+    exitFullScreen()
+
+    $(this).removeClass("exit-alt")
+    $(this).addClass("alt")
+    $(this).prop("title", "全屏")
+})
+
+$(".player-btn.refresh").click(function () {
+    let img = $(".source-img")
+    img.prop("src", img.prop("src") + "?" + Math.random())
+})

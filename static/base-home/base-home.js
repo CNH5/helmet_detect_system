@@ -64,6 +64,30 @@ function getWarningList() {
 
 }
 
+function handleFullScreen(ele) {
+    if (ele.requestFullscreen) {
+        ele.requestFullscreen()
+    } else if (ele.msRequestFullscreen) {
+        ele.msRequestFullscreen()
+    } else if (ele.mozRequestFullscreen) {
+        ele.mozRequestFullscreen()
+    } else if (ele.webkitRequestFullscreen) {
+        ele.webkitRequestFullscreen()
+    }
+}
+
+function exitFullScreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen()
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen()
+    } else if (document.mozCancelFullscreen) {
+        document.mozCancelFullscreen()
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen()
+    }
+}
+
 function customAlert(type, title, info, timeout) {
     let alt = $(
         '<div class="alert alert-' + type + ' alert-dismissible show d-inline-flex ms-auto me-auto" role="alert">' +

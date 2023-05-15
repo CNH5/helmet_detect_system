@@ -308,56 +308,62 @@ reviewContainer.on("click", ".player-btn.info", function () {
     let sourceImg = $(this).parent().parent().parent().children("img.source-img")
     monitorId = sourceImg.attr("src").replace(/\D/g, "")
     window.location = monitorInfoURL.replace("0", monitorId)
-})
 
-reviewContainer.on("click", ".player-btn.refresh", function () {
+}).on("click", ".player-btn.refresh", function () {
     let sourceImg = $(this).parent().parent().parent().children("img.source-img")
     sourceImg.prop("src", sourceImg.attr("src") + "?" + Math.random())
-})
 
-reviewContainer.on("click", ".player-btn.alt", function () {
-    // 全屏按钮
-})
+}).on("click", ".player-btn.alt", function () {
+    handleFullScreen($(this).parent().parent().parent()[0])
 
-reviewContainer.on("click", ".player-btn.change", function () {
+    $(this).removeClass("alt")
+    $(this).addClass("exit-alt")
+    $(this).prop("title", "退出全屏")
+
+}).on("click", ".player-btn.exit-alt", function () {
+    exitFullScreen()
+
+    $(this).removeClass("exit-alt")
+    $(this).addClass("alt")
+    $(this).prop("title", "全屏")
+
+}).on("click", ".player-btn.change", function () {
     changeIndex = $(this).parent().parent().parent().index()
-})
 
-reviewContainer.on("click", ".player-btn.remove", function () {
+}).on("click", ".player-btn.remove", function () {
     // 移除预览
     let index = $(this).parent().parent().parent().parent().index()
     updateLayoutItem(index, 0)
     reviewContainer.children().eq(index).html(noneWindowHTML())
-})
 
-reviewContainer.on("mouseover", ".source-img, .player-bar", function () {
+}).on("mouseover", ".source-img, .player-bar", function () {
     let playerBar = $(this).parent().children(".player-bar")
     playerBar.css("transform", "translateY(0)")
     playerBar.css("visibility", "visible")
-})
 
-reviewContainer.on("mouseover", ".source-player, .player-bar", function () {
+}).on("mouseover", ".source-player, .player-bar", function () {
     let playerBar = $(this).children(".player-bar")
     playerBar.css("transform", "translateY(0)")
     playerBar.css("visibility", "visible")
-})
 
-reviewContainer.on("mouseout", ".source-img, .player-bar", function () {
+}).on("mouseout", ".source-img, .player-bar", function () {
     let infoBar = $(this).parent().children(".player-bar.info")
     infoBar.css("transform", "translateY(-100%)")
     infoBar.css("visibility", "hidden")
     let controlBar = $(this).parent().children(".player-bar.control")
     controlBar.css("transform", "translateY(100%)")
     controlBar.css("visibility", "hidden")
-})
 
-reviewContainer.on("mouseout", ".source-player, .player-bar", function () {
+}).on("mouseout", ".source-player, .player-bar", function () {
     let infoBar = $(this).children(".player-bar.info")
     infoBar.css("transform", "translateY(-100%)")
     infoBar.css("visibility", "hidden")
     let controlBar = $(this).children(".player-bar.control")
     controlBar.css("transform", "translateY(100%)")
     controlBar.css("visibility", "hidden")
+
+}).on("click", ".add-source", function () {
+    changeIndex = $(this).parent().index()
 })
 
 monitorIdStartInput.keyup(function () {
@@ -443,10 +449,6 @@ monitorListArea.on("click", ".table-data", function () {
 
 $("redirect-monitor-insert-btn").click(function () {
     window.open(monitorCreateURL)
-})
-
-reviewContainer.on("click", ".add-source", function () {
-    changeIndex = $(this).parent().index()
 })
 
 $("#layout-update-modal").bind("show.bs.modal", function () {
