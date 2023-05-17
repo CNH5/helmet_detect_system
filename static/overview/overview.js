@@ -58,5 +58,5 @@ detectStatisticsPie.on("click", function (params) {
 })
 
 monitorDataPie.on("click", function (params) {
-    window.location = monitorListURL + "?detect=" + (params.dataIndex === 1)
+    window.location = monitorListURL + "?detect=" + (params.dataIndex === 0)
 })

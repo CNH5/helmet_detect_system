@@ -347,6 +347,8 @@ reviewContainer.on("click", ".player-btn.info", function () {
     playerBar.css("visibility", "visible")
 
 }).on("mouseout", ".source-img, .player-bar", function () {
+    // TODO: 鼠标不移动之后，隐藏两个player-bar
+
     let infoBar = $(this).parent().children(".player-bar.info")
     infoBar.css("transform", "translateY(-100%)")
     infoBar.css("visibility", "hidden")

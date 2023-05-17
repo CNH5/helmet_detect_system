@@ -109,14 +109,14 @@ def update_detect(request):
 def load_filter(request) -> Q:
     q = None
     for f in json.loads(request.GET.get("filter", "[]")):
-        if f.get("col") and f.get("operation") and f.get("value"):
+        if f.get("col") is not None and f.get("operation") is not None and f.get("value") is not None:
             if f["col"] in ["name", "source"]:
                 if f["operation"] not in ["contains", "regex", "exact"]:
                     f["operation"] = "contains"
             elif f["col"] in ["create_date", "pk", "id"]:
                 if f["operation"] not in ["exact", "gt", "lt", "gte", "lte", ""]:
                     f["operation"] = "exact"
-            elif f["col"] == "detect":
+            elif f["col"] == "helmet_detect":
                 f["operation"] = ""
             else:
                 continue

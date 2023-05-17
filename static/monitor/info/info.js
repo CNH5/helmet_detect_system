@@ -6,7 +6,6 @@ let resultList = $("#result-list")
 let detectTypeSelect = $("#detect-type-select")
 let startTimeInput = $("#start-time")
 let endTimeInput = $("#end-time")
-let resultTip = $(".result-tip-area")
 let allCheckBox = $("input[name=all-check-box]")
 let deleteCheckedBtn = $(".delete-checked")
 let orderSelect = $("#order-select")
@@ -63,6 +62,7 @@ function getResultsData(successCallback, errorCallback) {
             resultDataList = data["resultList"]
 
             resultList.html("")
+            let resultTip = $(".result-tip-area")
             resultTip.html("")
 
             if (resultDataList.length === 0) {

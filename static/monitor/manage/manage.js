@@ -13,6 +13,8 @@ let pageSize = 10
 let monitorListData = []
 let deleteMonitors = []
 
+let prefixFilter
+
 
 function getCheckedMonitorID() {
     let result = []
@@ -52,6 +54,20 @@ function refreshTable(successCallback, errorCallback) {
                     refreshTable()
                 }
             })
+
+            allCheckBox.prop("checked", false)
+
+            let resultTip = $(".result-tip-area")
+            resultTip.html("")
+
+            if (monitorListData.length === 0) {
+                resultTip.removeClass("d-none")
+                allCheckBox.addClass("disabled")
+                resultTip.html('<h4>' + (getFilterData().length > 0 ? "查询结果为空，请重新设置筛选条件" : "无监控设备") + '</h4>')
+            } else {
+                resultTip.addClass("d-none")
+                allCheckBox.removeClass("disabled")
+            }
 
             if (successCallback) {
                 successCallback(data)
@@ -138,7 +154,7 @@ function changeDetect(pkList, detect) {
 function getFilterData() {
     let filters = []
     filterList.find(".filter-item").each(function () {
-        let val = $(this).find("input[name=value]").val()
+        let val = $(this).find("[name=value]").val()
         if (val !== "") {
             let filter = {
                 "operator": $(this).find("select[name=operator]").val(),
@@ -189,12 +205,42 @@ function getFilterData() {
             filters.push(filter)
         }
     })
+    prefixFilter = filters
     return filters
+}
+
+function loadURLData() {
+    let params = {}
+    let p = window.location.href.split("?")
+    if (p.length > 1) {
+        p = p[1].split("&")
+        for (let i = 0; i < p.length; i++) {
+            let pi = p[i].split("=")
+            if (pi.length === 2) {
+                params[pi[0]] = pi[1]
+            }
+        }
+        if (params.detect) {
+            let item = filterList.find(".filter-item")
+            item.find("select[name=col]").prop("value", "helmet_detect")
+            item.find("select[name=operation]").html("<option value='' selected>=</option>")
+            item.find("select[name=operation]").prop("disabled", true)
+            item.find("[name=value]").parent().html(
+                '<select class="form-select form-select-sm fs-14" name="value">' +
+                '<option value="true" ' + (params.detect === "true" ? "selected" : "") + '>是</option>' +
+                '<option value="false" ' + (params.detect === "true" ? "" : "selected") + '>否</option>' +
+                '</select>'
+            )
+            filterNumsBadge.html(1)
+            filterNumsBadge.removeClass("d-none")
+        }
+    }
 }
 
 // 初始
 $(() => {
-    refreshTable();
+    loadURLData()
+    refreshTable()
 })
 
 // 监听
@@ -329,10 +375,9 @@ $(".btn.filter-add").click(function () {
 filterList.on("change", "select[name=col]", function () {
     let filterItem = $(this).parent().parent()
     let operationNode = filterItem.find("select[name=operation]")
-    let valueNode = filterItem.find("input[name=value]")
+    let valueNode = filterItem.find("[name=value]").parent()
     let val = $(this).val()
     let pre = $(this).data('pre')
-    valueNode.val("")
     if (val === "name" || val === "source") {
         if (pre !== "name" && pre !== "source") {
             operationNode.html(
@@ -344,7 +389,9 @@ filterList.on("change", "select[name=col]", function () {
             )
         }
         operationNode.prop("disabled", false)
-        valueNode.prop("type", "text")
+        valueNode.html(
+            '<input type="number" name="value" min="1" class="form-control form-control-sm fs-14">'
+        )
     } else if (val === "id" || val === "create_date") {
         if (pre !== "id" && pre !== "create_date") {
             operationNode.html(
@@ -357,16 +404,23 @@ filterList.on("change", "select[name=col]", function () {
             )
         }
         operationNode.prop("disabled", false)
-        valueNode.prop("type", val === "id" ? "number" : "datetime-local")
-    } else if (val === "detect") {
+        valueNode.html(
+            '<input type="' + (val === "id" ? "number" : "datetime-local") +
+            '" name="value" min="1" class="form-control form-control-sm fs-14">'
+        )
+    } else if (val === "helmet_detect") {
         operationNode.html("<option value='' selected>=</option>")
         operationNode.prop("disabled", true)
-        // TODO: 需要将valueNode改为select
+        valueNode.html(
+            '<select class="form-select form-select-sm fs-14" name="value">' +
+            '<option value="true" selected>是</option>' +
+            '<option value="false">否</option>' +
+            '</select>'
+        )
     }
     $(this).data('pre', val);
-})
 
-filterList.on("click", ".btn.remove", function () {
+}).on("click", ".btn.remove", function () {
     if (!isDisabled($(this))) {
         $(this).parent().parent().remove()
     }
@@ -379,7 +433,7 @@ orderCol.change(function () {
 $(".btn.clean-filters").click(function () {
     filterList.find(".filter-item").each(function (i, item) {
         if (i === 0) {
-            $(item).find("input[name=value]").val("")
+            $(item).find("[name=value]").val("")
         } else {
             $(item).remove()
         }
@@ -388,12 +442,12 @@ $(".btn.clean-filters").click(function () {
 
 $("#filter-set-modal").bind("hide.bs.modal", function () {
     let filterNums = 0
-    filterList.find("input[name=value]").each(function () {
+    filterList.find("[name=value]").each(function () {
         if ($(this).val() !== "") {
             filterNums++
         }
     })
-    if (parseInt(filterNumsBadge.html()) !== filterNums) {
+    if (prefixFilter !== getFilterData()) {
         currentPage = 1
         refreshTable()
     }
