@@ -72,7 +72,6 @@ function getResultsData(successCallback, errorCallback) {
         },
         success: function (data) {
             currentPage = data["currentPage"]
-            pageSize = data["pageSize"]
             resultsListData = data["resultsList"]
 
             showResultsData()
