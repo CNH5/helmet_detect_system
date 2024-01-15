@@ -1,0 +1,6 @@
+Django==5.0.1
+numpy==1.26.3
+opencv_python==4.9.0.80
+PyJWT==2.8.0
+pyzmq==25.1.2
+ultralytics==8.1.1
