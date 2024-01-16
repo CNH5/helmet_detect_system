@@ -55,7 +55,7 @@ def _generate_detected_frame(monitor: MonitorInfo):
         if data["event"].is_set():
             break
 
-        data["frame"] = result.plot(line_width=2, pil=True, example="测试")
+        data["frame"] = result.plot(line_width=2, pil=True)
         cls = result.boxes.cls
         detect_has_change = update_now_data(cls)
         has_detected = len(cls) > 0

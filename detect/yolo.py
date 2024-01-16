@@ -32,7 +32,6 @@ class ModelYOLO(abc.ABC):
 class ModelYOLOv8(ModelYOLO):
     def __init__(self):
         self._model = YOLO(settings.MODEL_YOLOv8_PATH)
-        self._model.names = LABEL_NAMES
 
     def generate_result(self, source, conf: float = 0.6):
         for result in self._model.predict(source, conf=conf, stream=True):
